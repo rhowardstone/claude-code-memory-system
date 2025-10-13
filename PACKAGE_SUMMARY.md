@@ -20,7 +20,7 @@ This package contains a complete, production-ready memory preservation system fo
    - Auto-pruning and clustering
    - **No API calls required** - 100% local
 
-2. **SessionStart Hook** (`sessionstart_memory_injector_v2.py`)
+2. **SessionStart Hook** (`sessionstart_memory_injector_v5.py`)
    - Injects memories after compaction
    - Vector search for semantic relevance
    - Recent + relevant memory retrieval
@@ -49,7 +49,7 @@ This package contains a complete, production-ready memory preservation system fo
    - Automatic cluster determination
    - Topic-based organization
 
-7. **CLI Tool** (`memory_cli.py`)
+7. **CLI Tool** (`query_memories.py`)
    - List, search, stats commands
    - Cluster visualization
    - Prune and export functionality
@@ -125,8 +125,8 @@ This package contains a complete, production-ready memory preservation system fo
 
 ### Memory Storage
 - ✅ ChromaDB vector database with HNSW indexing
-- ✅ Local sentence-transformers embeddings (all-MiniLM-L6-v2)
-- ✅ 384-dimensional vectors
+- ✅ Local sentence-transformers embeddings (nomic-embed-text-v1.5)
+- ✅ 768-dimensional vectors
 - ✅ Cosine similarity distance metric
 - ✅ ~1MB per 100 memories
 
@@ -196,7 +196,7 @@ This package contains a complete, production-ready memory preservation system fo
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/claude-memory-system.git
+git clone https://github.com/rhowardstone/claude-code-memory-system.git
 cd claude-memory-system
 
 # Run installer
@@ -212,7 +212,7 @@ cd claude-memory-system
 2. When compaction triggers naturally (~150k tokens)
 3. PreCompact hook extracts memories
 4. SessionStart hook injects relevant memories
-5. Browse with CLI: `python3 ~/.claude/memory-hooks/memory_cli.py stats`
+5. Browse with CLI: `python3 ~/.claude/memory-hooks/query_memories.py stats`
 
 ---
 
@@ -242,15 +242,15 @@ cd claude-memory-system
 ## 📁 Package Structure
 
 ```
-claude-memory-system/
+claude-code-memory-system/
 ├── hooks/                              # Core implementation
 │   ├── precompact_memory_extractor_v2.py   # Main extraction
-│   ├── sessionstart_memory_injector_v2.py  # Memory injection
+│   ├── sessionstart_memory_injector_v5.py  # Memory injection
 │   ├── memory_scorer.py                    # Importance scoring
 │   ├── multimodal_extractor.py             # Artifact extraction
 │   ├── memory_pruner.py                    # Auto-pruning
 │   ├── memory_clustering.py                # Hierarchical clustering
-│   ├── memory_cli.py                       # CLI tool
+│   ├── query_memories.py                       # CLI tool
 │   └── requirements.txt                    # Python dependencies
 ├── docs/                               # Documentation
 │   ├── INSTALLATION.md                 # Installation guide
@@ -287,7 +287,7 @@ claude-memory-system/
 - Recency decay: exponential falloff (0.5^(days_old/30))
 
 ### Vector Search Strategy
-- Semantic search with all-MiniLM-L6-v2 (384-dim)
+- Semantic search with nomic-embed-text-v1.5 (768-dim)
 - HNSW indexing for fast approximate search
 - Combined scoring: (1 - cosine_distance) × importance
 - Filters: MIN_IMPORTANCE=3.0, session-local only
@@ -339,8 +339,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Testing requirements
 
 ### Support
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/claude-memory-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/claude-memory-system/discussions)
+- **Issues**: [GitHub Issues](https://github.com/rhowardstone/claude-code-memory-system/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/rhowardstone/claude-code-memory-system/discussions)
 - **Documentation**: [docs/](docs/)
 
 ### License

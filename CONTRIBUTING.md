@@ -10,7 +10,7 @@ Thank you for your interest in contributing! This project aims to make Claude Co
 
 If you find a bug or have a feature request:
 
-1. Check existing [GitHub Issues](https://github.com/YOUR_USERNAME/claude-memory-system/issues)
+1. Check existing [GitHub Issues](https://github.com/rhowardstone/claude-code-memory-system/issues)
 2. If not found, create a new issue with:
    - Clear title and description
    - Steps to reproduce (for bugs)
@@ -48,7 +48,7 @@ We welcome pull requests! Please:
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/claude-memory-system.git
+git clone https://github.com/rhowardstone/claude-code-memory-system.git
 cd claude-memory-system
 
 # Install dependencies
@@ -111,15 +111,15 @@ python3 hooks/memory_clustering.py
 ## Project Structure
 
 ```
-claude-memory-system/
+claude-code-memory-system/
 ├── hooks/                      # Core hook implementations
 │   ├── precompact_memory_extractor_v2.py
-│   ├── sessionstart_memory_injector_v2.py
+│   ├── sessionstart_memory_injector_v5.py
 │   ├── memory_scorer.py
 │   ├── multimodal_extractor.py
 │   ├── memory_pruner.py
 │   ├── memory_clustering.py
-│   ├── memory_cli.py
+│   ├── query_memories.py
 │   └── requirements.txt
 ├── docs/                       # Documentation
 │   ├── INSTALLATION.md
@@ -266,7 +266,7 @@ Need help contributing?
 
 - **Documentation**: Read [docs/](docs/)
 - **Issues**: Ask in an issue or discussion
-- **Chat**: [GitHub Discussions](https://github.com/YOUR_USERNAME/claude-memory-system/discussions)
+- **Chat**: [GitHub Discussions](https://github.com/rhowardstone/claude-code-memory-system/discussions)
 - **Email**: [your-email@example.com]
 
 ---

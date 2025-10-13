@@ -1,14 +1,14 @@
 # Installation Guide
 
-Complete installation instructions for the Claude Code Memory System.
+Complete installation instructions for the Claude Code Memory System V5.
 
 ---
 
 ## Automatic Installation (Recommended)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/claude-memory-system.git
-cd claude-memory-system
+git clone https://github.com/rhowardstone/claude-code-memory-system.git
+cd claude-code-memory-system
 ./install.sh
 ```
 
@@ -81,11 +81,11 @@ Edit `~/.claude/settings.json` to add hooks:
     ],
     "SessionStart": [
       {
-        "matcher": "compact",
+        "matcher": "compact|resume|startup",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector_v2.py"
+            "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector_v5.py"
           }
         ]
       }
@@ -105,15 +105,18 @@ Check that hooks are recognized:
 claude
 ```
 
-Check that memory CLI works:
+Check that memory query tool works:
 
 ```bash
-python3 ~/.claude/memory-hooks/memory_cli.py stats
+python3 ~/.claude/memory-hooks/query_memories.py --stats
 ```
 
 Expected output (if no memories yet):
 ```
-No memories found
+{
+  "total": 0,
+  ...
+}
 ```
 
 ---
@@ -123,7 +126,7 @@ No memories found
 To upgrade to a new version:
 
 ```bash
-cd claude-memory-system
+cd claude-code-memory-system
 git pull
 ./install.sh
 ```
@@ -253,13 +256,13 @@ cat ~/.claude/settings.json | python3 -m json.tool | grep -A 10 hooks
 
 Should show PreCompact and SessionStart hooks.
 
-### 2. Test Memory CLI
+### 2. Test Memory Query Tool
 
 ```bash
-python3 ~/.claude/memory-hooks/memory_cli.py --help
+python3 ~/.claude/memory-hooks/query_memories.py --help
 ```
 
-Should show available commands.
+Should show available query options.
 
 ### 3. Check Dependencies
 
@@ -299,8 +302,8 @@ Should see "PreCompact-V2 triggered" messages.
 After successful installation:
 
 1. **Read the Usage Guide**: See [USAGE.md](USAGE.md) for detailed usage instructions
-2. **Explore CLI Tools**: Try `memory_cli.py` commands
-3. **Customize Configuration**: Adjust scoring/pruning thresholds (see [CONFIGURATION.md](CONFIGURATION.md))
+2. **Explore CLI Tools**: Try `query_memories.py` commands (--stats, --topic, --keywords)
+3. **Customize Configuration**: Adjust scoring/pruning thresholds in hook files
 4. **Start Using**: Just use Claude Code normally - memories will be preserved automatically!
 
 ---
@@ -310,9 +313,9 @@ After successful installation:
 If installation issues persist:
 
 1. Check debug log: `tail ~/.claude/memory_hooks_debug.log`
-2. File an issue: [GitHub Issues](https://github.com/YOUR_USERNAME/claude-memory-system/issues)
+2. File an issue: [GitHub Issues](https://github.com/rhowardstone/claude-code-memory-system/issues)
 3. Include:
    - OS and Python version
    - Error messages
    - Debug log excerpt
-   - Output of `pip list | grep -E "chromadb|sentence"`
+   - Output of `pip list | grep -E "chromadb|sentence|einops"`

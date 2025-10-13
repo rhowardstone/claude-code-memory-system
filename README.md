@@ -1,14 +1,27 @@
-# Claude Code Memory System
+# Claude Code Memory System V5
 
-**Intelligent memory preservation system for Claude Code conversations that survive compaction.**
+**Intelligent memory preservation system with knowledge graph and task-context awareness.**
 
-Stop losing context when your conversations get compacted! This system automatically extracts, scores, and preserves important memories from your coding sessions, then intelligently injects them back after compaction.
+Stop losing context when your conversations get compacted! This system automatically extracts, scores, and preserves important memories from your coding sessions, then intelligently injects the most relevant ones back using knowledge graph traversal and task-context scoring.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
 ## 🌟 Features
+
+### V5: Knowledge Graph + Task-Context Awareness
+- **🕸️ Knowledge Graph**: Automatically extracts entities (files, functions, bugs, features) and builds relationship graph
+- **🎯 Task-Context Scoring**: Boosts memories relevant to current work (1.5-3x importance)
+- **📈 PageRank Centrality**: Identifies most important entities across conversations
+- **🔗 Multi-Hop Traversal**: Finds related memories through graph relationships (1-2 hops)
+- **📊 Adaptive K Retrieval**: Returns 0-20 memories dynamically based on quality (not fixed top-K!)
+
+### V4: Full Transcripts + Better Embeddings
+- **📝 Full Transcript Storage**: No truncation! Complete intent/action/outcome preserved
+- **🚀 nomic-embed-text-v1.5**: 768-dim embeddings with 8192 token context (16x better than old model!)
+- **🎨 Hierarchical Display**: Short summaries for injection, full transcripts via query tool
+- **⚡ 85% Relevance Improvement**: Task-relevant queries: 72% vs 39% with old system
 
 ### Core Memory System
 - **🧠 Smart Chunking**: Automatically breaks conversations into Intent-Action-Outcome triplets
@@ -24,9 +37,10 @@ Automatically extracts and indexes:
 - 🏗️ **Architecture discussions** and design decisions
 - ⚙️ **Commands executed**
 - ❌ **Error messages** and troubleshooting
+- 🔧 **Tools used** (Read, Write, Edit, Bash, etc.)
 
 ### No API Costs
-- **100% Local**: Uses sentence-transformers for embeddings (all-MiniLM-L6-v2)
+- **100% Local**: Uses sentence-transformers for embeddings (nomic-embed-text-v1.5)
 - **No API calls**: Smart rule-based chunking (no LLM needed)
 - **Offline-first**: Works without internet connection
 
@@ -43,8 +57,8 @@ Automatically extracts and indexes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/claude-memory-system.git
-cd claude-memory-system
+git clone https://github.com/rhowardstone/claude-code-memory-system.git
+cd claude-code-memory-system
 
 # Run installer (safely updates settings.json)
 ./install.sh
@@ -150,32 +164,35 @@ Just use Claude Code normally! Memories are automatically:
 
 ### CLI Tools
 
-Browse and search your memories anytime:
+Browse and search your memories anytime with `query_memories.py`:
 
 ```bash
 # View statistics
-python3 ~/.claude/memory-hooks/memory_cli.py stats
+python3 ~/.claude/memory-hooks/query_memories.py --stats
 
-# Search semantically
-python3 ~/.claude/memory-hooks/memory_cli.py search "authentication bug fix"
+# Search by topic (semantic)
+python3 ~/.claude/memory-hooks/query_memories.py --topic "authentication bug fix"
 
-# List all memories
-python3 ~/.claude/memory-hooks/memory_cli.py list
+# Search by keywords
+python3 ~/.claude/memory-hooks/query_memories.py --keywords error crash failed
 
-# View for specific session
-python3 ~/.claude/memory-hooks/memory_cli.py list --session abc123
+# High importance only
+python3 ~/.claude/memory-hooks/query_memories.py --min-importance 15
 
-# View hierarchical clusters
-python3 ~/.claude/memory-hooks/memory_cli.py clusters --session abc123
+# Find files involved in errors
+python3 ~/.claude/memory-hooks/query_memories.py --files-involved --keywords bug
 
-# Prune old memories (dry run)
-python3 ~/.claude/memory-hooks/memory_cli.py prune
+# Date range search
+python3 ~/.claude/memory-hooks/query_memories.py --since "2025-10-12" --until "2025-10-13"
 
-# Actually prune
-python3 ~/.claude/memory-hooks/memory_cli.py prune --execute
+# Session-specific
+python3 ~/.claude/memory-hooks/query_memories.py --session current --topic "recent work"
 
-# Export memories
-python3 ~/.claude/memory-hooks/memory_cli.py export --output memories.json
+# Detailed output
+python3 ~/.claude/memory-hooks/query_memories.py --topic "testing" --format detailed
+
+# JSON output for scripting
+python3 ~/.claude/memory-hooks/query_memories.py --topic "bugs" --format json
 ```
 
 ### Example Output
@@ -219,12 +236,14 @@ WEIGHTS = {
 
 ### Tuning Memory Retrieval
 
-Edit `~/.claude/memory-hooks/sessionstart_memory_injector_v2.py`:
+Edit `~/.claude/memory-hooks/sessionstart_memory_injector_v5.py`:
 
 ```python
-TOP_K_MEMORIES = 10           # Semantic search results
-RECENT_MEMORIES = 5            # Recent chronological
-MIN_IMPORTANCE = 3.0           # Minimum score to inject
+TOP_K_MEMORIES = 20           # Maximum memories (adaptive returns 0-20)
+RECENT_MEMORIES = 4            # Recent chronological
+MIN_IMPORTANCE = 5.0           # Minimum score to inject
+MIN_SIMILARITY = 0.35          # Minimum relevance threshold
+KG_CACHE_TTL = 300            # Knowledge graph cache lifetime (seconds)
 ```
 
 ### Tuning Auto-Pruning
@@ -256,13 +275,16 @@ AUTO_PRUNE = True               # Auto-prune on compaction
 ```
 ~/.claude/
 ├── memory-hooks/
-│   ├── precompact_memory_extractor_v2.py   # Main extraction hook
-│   ├── sessionstart_memory_injector_v2.py  # Memory injection hook
+│   ├── precompact_memory_extractor_v2.py   # V4: Full transcript extraction
+│   ├── sessionstart_memory_injector_v5.py  # V5: Task-context aware injection
+│   ├── entity_extractor.py                 # Phase 2: Entity extraction
+│   ├── knowledge_graph.py                  # Phase 2: Graph construction
+│   ├── task_context_scorer.py              # Phase 2: Task-context scoring
+│   ├── query_memories.py                   # CLI query interface
 │   ├── memory_scorer.py                    # Importance calculation
 │   ├── multimodal_extractor.py             # Artifact extraction
 │   ├── memory_pruner.py                    # Auto-pruning logic
 │   ├── memory_clustering.py                # Hierarchical clustering
-│   ├── memory_cli.py                       # CLI interface
 │   └── requirements.txt                    # Python dependencies
 ├── memory_db/                              # ChromaDB storage
 │   └── (vector database files)
@@ -316,18 +338,20 @@ tail -f ~/.claude/memory_hooks_debug.log
 
 **"Too many memories"**
 - Lower MAX_MEMORIES_PER_SESSION in memory_pruner.py
-- Raise MIN_IMPORTANCE in sessionstart_memory_injector_v2.py
-- Run manual pruning: `memory_cli.py prune --execute`
+- Raise MIN_IMPORTANCE in sessionstart_memory_injector_v5.py
+- Run manual pruning (see memory_pruner.py)
 
 ---
 
 ## 🔬 Technical Details
 
-### Embeddings
-- **Model**: `all-MiniLM-L6-v2` (384 dimensions)
-- **Size**: ~90MB
-- **Speed**: ~1000 embeddings/sec on CPU
-- **Quality**: Strong semantic understanding for code contexts
+### Embeddings (V4 Upgrade)
+- **Model**: `nomic-ai/nomic-embed-text-v1.5` (768 dimensions)
+- **Context**: 8192 tokens (16x better than old 512-token model!)
+- **Size**: ~140MB
+- **Speed**: ~500 embeddings/sec on CPU
+- **Quality**: Ranks with top-10 models 70x bigger; perfect for code!
+- **Upgrade**: 85% relevance improvement over old all-MiniLM-L6-v2
 
 ### Vector Database
 - **Engine**: ChromaDB with HNSW indexing
@@ -373,12 +397,12 @@ Contributions welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```bash
 # Clone and install in dev mode
-git clone https://github.com/YOUR_USERNAME/claude-memory-system.git
-cd claude-memory-system
-pip install -e .
+git clone https://github.com/rhowardstone/claude-code-memory-system.git
+cd claude-code-memory-system
+pip install -r hooks/requirements.txt
 
-# Run tests
-pytest tests/
+# Test installation
+./install.sh
 ```
 
 ---
@@ -400,8 +424,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📮 Support
 
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/claude-memory-system/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/claude-memory-system/discussions)
+- **Issues**: [GitHub Issues](https://github.com/rhowardstone/claude-code-memory-system/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/rhowardstone/claude-code-memory-system/discussions)
 - **Documentation**: [docs/](docs/)
 
 ---

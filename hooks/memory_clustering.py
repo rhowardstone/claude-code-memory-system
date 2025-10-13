@@ -195,7 +195,7 @@ class MemoryClustering:
             return None
 
         # Generate query embedding
-        model = SentenceTransformer("all-MiniLM-L6-v2")
+        model = SentenceTransformer("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True)
         query_embedding = model.encode(query_text).tolist()
 
         # Get cluster information

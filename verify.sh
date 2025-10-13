@@ -34,15 +34,18 @@ echo "Checking installation..."
 if [ -d "$HOME/.claude/memory-hooks" ]; then
     check_pass "Installation directory exists"
 
-    # Check hook files
+    # Check hook files (V5)
     REQUIRED_FILES=(
         "precompact_memory_extractor_v2.py"
-        "sessionstart_memory_injector_v2.py"
+        "sessionstart_memory_injector_v5.py"
+        "entity_extractor.py"
+        "knowledge_graph.py"
+        "task_context_scorer.py"
+        "query_memories.py"
         "memory_scorer.py"
         "multimodal_extractor.py"
         "memory_pruner.py"
         "memory_clustering.py"
-        "memory_cli.py"
         "requirements.txt"
     )
 
@@ -96,12 +99,12 @@ else
 fi
 echo ""
 
-# Check memory CLI
+# Check query tool
 echo "Checking CLI tools..."
-if python3 "$HOME/.claude/memory-hooks/memory_cli.py" --help &>/dev/null; then
-    check_pass "Memory CLI working"
+if python3 "$HOME/.claude/memory-hooks/query_memories.py" --help &>/dev/null; then
+    check_pass "Query tool working"
 else
-    check_fail "Memory CLI not working"
+    check_fail "Query tool not working"
 fi
 echo ""
 
@@ -140,12 +143,13 @@ echo "Results: $PASS passed, $FAIL failed"
 echo ""
 
 if [ $FAIL -eq 0 ]; then
-    echo "✅ All checks passed! Memory system is properly installed."
+    echo "✅ All checks passed! Memory System V5 is properly installed."
     echo ""
     echo "Next steps:"
     echo "  1. Use Claude Code normally"
     echo "  2. When compaction triggers, memories will be automatically extracted"
-    echo "  3. Use CLI tools to browse: python3 ~/.claude/memory-hooks/memory_cli.py --help"
+    echo "  3. Use CLI tools to browse: python3 ~/.claude/memory-hooks/query_memories.py --help"
+    echo "  4. V5 features include knowledge graph and task-context aware retrieval!"
     exit 0
 else
     echo "⚠️  Some checks failed. Please review the issues above."

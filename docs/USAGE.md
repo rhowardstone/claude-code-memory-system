@@ -78,7 +78,7 @@ Claude will see:
 ### View Statistics
 
 ```bash
-python3 ~/.claude/memory-hooks/memory_cli.py stats
+python3 ~/.claude/memory-hooks/query_memories.py --stats
 ```
 
 Output:
@@ -105,7 +105,7 @@ Multi-modal Content:
 Semantic search across all memories:
 
 ```bash
-python3 ~/.claude/memory-hooks/memory_cli.py search "authentication bug"
+python3 ~/.claude/memory-hooks/query_memories.py --topic "authentication bug"
 ```
 
 Output:
@@ -132,10 +132,10 @@ Output:
 
 ```bash
 # All memories
-python3 ~/.claude/memory-hooks/memory_cli.py list
+python3 ~/.claude/memory-hooks/query_memories.py --session current
 
 # Specific session
-python3 ~/.claude/memory-hooks/memory_cli.py list --session abc123
+python3 ~/.claude/memory-hooks/query_memories.py --session current --session abc123
 ```
 
 ### View Clusters
@@ -143,7 +143,7 @@ python3 ~/.claude/memory-hooks/memory_cli.py list --session abc123
 See how memories are organized:
 
 ```bash
-python3 ~/.claude/memory-hooks/memory_cli.py clusters --session abc123
+python3 ~/.claude/memory-hooks/query_memories.py --stats --session abc123
 ```
 
 Output:
@@ -174,13 +174,13 @@ Remove old or low-importance memories:
 
 ```bash
 # Dry run (see what would be pruned)
-python3 ~/.claude/memory-hooks/memory_cli.py prune
+python3 ~/.claude/memory-hooks/# See memory_pruner.py for pruning
 
 # Actually prune
-python3 ~/.claude/memory-hooks/memory_cli.py prune --execute
+python3 ~/.claude/memory-hooks/# See memory_pruner.py for pruning --execute
 
 # Prune specific session
-python3 ~/.claude/memory-hooks/memory_cli.py prune --session abc123 --execute
+python3 ~/.claude/memory-hooks/# See memory_pruner.py for pruning --session abc123 --execute
 ```
 
 ### Export Memories
@@ -189,10 +189,10 @@ Export to JSON for backup or analysis:
 
 ```bash
 # Export all
-python3 ~/.claude/memory-hooks/memory_cli.py export --output all_memories.json
+python3 ~/.claude/memory-hooks/# query_memories.py --format json --output all_memories.json
 
 # Export specific session
-python3 ~/.claude/memory-hooks/memory_cli.py export --session abc123 --output session_abc.json
+python3 ~/.claude/memory-hooks/# query_memories.py --format json --session abc123 --output session_abc.json
 ```
 
 ---
@@ -252,11 +252,11 @@ Don't manually trigger compaction unless necessary. Natural compaction works bes
 
 ```bash
 # Weekly review
-python3 ~/.claude/memory-hooks/memory_cli.py stats
-python3 ~/.claude/memory-hooks/memory_cli.py search "what did I work on"
+python3 ~/.claude/memory-hooks/query_memories.py --stats
+python3 ~/.claude/memory-hooks/query_memories.py --topic "what did I work on"
 
 # Monthly cleanup
-python3 ~/.claude/memory-hooks/memory_cli.py prune --execute
+python3 ~/.claude/memory-hooks/# See memory_pruner.py for pruning --execute
 ```
 
 ### 3. Use Descriptive Commit Messages
@@ -351,7 +351,7 @@ EOF
 cp -r ~/.claude/memory_db ~/.claude/memory_db.backup
 
 # Backup specific session export
-python3 ~/.claude/memory-hooks/memory_cli.py export \
+python3 ~/.claude/memory-hooks/# query_memories.py --format json \
   --session abc123 \
   --output backups/session_abc123_$(date +%Y%m%d).json
 ```
@@ -398,23 +398,23 @@ Search supports semantic understanding:
 
 ```bash
 # These will find similar results:
-memory_cli.py search "auth bug"
-memory_cli.py search "authentication issue"
-memory_cli.py search "login not working"
+query_memories.py --topic "auth bug"
+query_memories.py --topic "authentication issue"
+query_memories.py --topic "login not working"
 ```
 
 ### 2. Combine Search with Session Filter
 
 ```bash
 # Find in specific session
-memory_cli.py search "API endpoint" --session abc123
+query_memories.py --topic "API endpoint" --session abc123
 ```
 
 ### 3. Export for Analysis
 
 ```bash
 # Export and analyze with jq
-memory_cli.py export --output mem.json
+# query_memories.py --format json --output mem.json
 cat mem.json | jq '[.[] | select(.metadata.importance_score > 20)]'
 ```
 
@@ -425,7 +425,7 @@ cat mem.json | jq '[.[] | select(.metadata.importance_score > 20)]'
 du -sh ~/.claude/memory_db
 
 # Check memory count
-memory_cli.py stats | grep "Total memories"
+query_memories.py --stats | grep "Total memories"
 ```
 
 ---

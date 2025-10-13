@@ -1,18 +1,19 @@
 #!/bin/bash
-# Claude Code Memory System - Installation Script
-# Safely installs memory hooks and updates settings without overwriting existing config
+# Claude Code Memory System V5 - Installation Script
+# Installs memory hooks and updates settings without overwriting existing config
 
 set -e
 
 echo "========================================================================="
-echo "Claude Code Memory System - Installer"
+echo "Claude Code Memory System V5 - Installer"
 echo "========================================================================="
 echo ""
 echo "This will install:"
-echo "  • Memory extraction hooks (PreCompact, SessionStart)"
-echo "  • Smart chunking with importance scoring"
-echo "  • Multi-modal artifact extraction"
-echo "  • Vector database with local embeddings"
+echo "  • Memory extraction with FULL transcripts (PreCompact V4)"
+echo "  • Task-context aware memory injection (SessionStart V5)"
+echo "  • Knowledge graph with entity extraction (Phase 2)"
+echo "  • Smart importance scoring and adaptive K retrieval"
+echo "  • Vector database with nomic-embed (768d, 8k token context)"
 echo "  • CLI tools for browsing and searching memories"
 echo ""
 
@@ -41,15 +42,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "📁 Creating installation directory..."
 mkdir -p "$INSTALL_DIR"
 
-# Copy hooks
+# Copy hooks - V5 complete system
 echo "📋 Installing hooks..."
 cp "$SCRIPT_DIR/hooks/precompact_memory_extractor_v2.py" "$INSTALL_DIR/"
-cp "$SCRIPT_DIR/hooks/sessionstart_memory_injector_v2.py" "$INSTALL_DIR/"
+cp "$SCRIPT_DIR/hooks/sessionstart_memory_injector_v5.py" "$INSTALL_DIR/"
+cp "$SCRIPT_DIR/hooks/entity_extractor.py" "$INSTALL_DIR/"
+cp "$SCRIPT_DIR/hooks/knowledge_graph.py" "$INSTALL_DIR/"
+cp "$SCRIPT_DIR/hooks/task_context_scorer.py" "$INSTALL_DIR/"
+cp "$SCRIPT_DIR/hooks/query_memories.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/hooks/memory_scorer.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/hooks/multimodal_extractor.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/hooks/memory_pruner.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/hooks/memory_clustering.py" "$INSTALL_DIR/"
-cp "$SCRIPT_DIR/hooks/memory_cli.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/hooks/requirements.txt" "$INSTALL_DIR/"
 
 # Make scripts executable
@@ -60,6 +64,7 @@ echo ""
 
 # Install Python dependencies
 echo "📦 Installing Python dependencies..."
+echo "   (This may take a few minutes for first-time install)"
 python3 -m pip install --user -r "$INSTALL_DIR/requirements.txt" --quiet
 
 if [ $? -eq 0 ]; then
@@ -67,6 +72,14 @@ if [ $? -eq 0 ]; then
 else
     echo "⚠️  Warning: Some dependencies may have failed to install"
     echo "   You can manually install with: pip install -r $INSTALL_DIR/requirements.txt"
+fi
+echo ""
+
+# Install additional requirements for nomic-embed
+echo "📦 Installing nomic-embed dependencies..."
+python3 -m pip install --user einops --quiet
+if [ $? -eq 0 ]; then
+    echo "✓ Nomic-embed dependencies installed"
 fi
 echo ""
 
@@ -96,7 +109,7 @@ if [ ! -f "$SETTINGS_FILE" ]; then
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector_v2.py"
+            "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector_v5.py"
           }
         ]
       }
@@ -104,7 +117,7 @@ if [ ! -f "$SETTINGS_FILE" ]; then
   }
 }
 EOF
-    echo "✓ Created settings.json with memory hooks"
+    echo "✓ Created settings.json with memory hooks (V5)"
 else
     echo "Updating existing settings.json..."
 
@@ -144,7 +157,7 @@ settings["hooks"]["SessionStart"] = [
         "hooks": [
             {
                 "type": "command",
-                "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector_v2.py"
+                "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector_v5.py"
             }
         ]
     }
@@ -154,7 +167,7 @@ settings["hooks"]["SessionStart"] = [
 with open(settings_path, 'w') as f:
     json.dump(settings, f, indent=2)
 
-print("✓ Settings updated successfully")
+print("✓ Settings updated successfully (V5)")
 PYEOF
 
     if [ $? -ne 0 ]; then
@@ -165,31 +178,35 @@ fi
 
 echo ""
 echo "========================================================================="
-echo "✅ Installation Complete!"
+echo "✅ Installation Complete - V5 with Knowledge Graph!"
 echo "========================================================================="
 echo ""
 echo "Memory system installed successfully!"
 echo ""
 echo "📊 What's been installed:"
-echo "  • PreCompact hook: Extracts memories before compaction"
-echo "  • SessionStart hook: Injects relevant memories after compaction"
-echo "  • Vector database with HNSW indexing (ChromaDB)"
-echo "  • Local embeddings (all-MiniLM-L6-v2, no API calls)"
-echo "  • Smart chunking with Intent-Action-Outcome structure"
-echo "  • Importance scoring with 10+ signals"
-echo "  • Multi-modal artifact extraction (code, files, architecture)"
-echo "  • Auto-pruning (age, redundancy, capacity)"
-echo "  • Hierarchical clustering"
+echo "  • PreCompact V4: Extracts FULL transcripts (not truncated!)"
+echo "  • SessionStart V5: Task-context aware with knowledge graph"
+echo "  • Entity extraction: FILES, FUNCTIONS, BUGS, FEATURES, etc."
+echo "  • Knowledge graph: NetworkX with PageRank centrality"
+echo "  • Task-context scoring: Boosts memories relevant to current work"
+echo "  • Adaptive K retrieval: Returns 0-20 memories based on quality"
+echo "  • Vector database: ChromaDB with HNSW indexing"
+echo "  • Embeddings: nomic-embed-text-v1.5 (768d, 8192 token context)"
+echo "  • Smart chunking: Intent-Action-Outcome structure"
+echo "  • Importance scoring: 10+ signals (decisions, fixes, learnings)"
+echo "  • Multi-modal artifacts: code, files, errors, architecture"
+echo "  • Auto-pruning: age, redundancy, capacity-based"
 echo ""
 echo "🚀 Next steps:"
 echo "  1. Continue using Claude Code normally"
 echo "  2. When compaction triggers, memories will be automatically extracted"
-echo "  3. After compaction, relevant memories will be injected"
+echo "  3. After compaction, task-relevant memories will be injected"
 echo ""
-echo "🔍 Browse your memories anytime:"
-echo "  python3 ~/.claude/memory-hooks/memory_cli.py stats"
-echo "  python3 ~/.claude/memory-hooks/memory_cli.py search \"query\""
-echo "  python3 ~/.claude/memory-hooks/memory_cli.py list"
+echo "🔍 Query your memories anytime:"
+echo "  python3 ~/.claude/memory-hooks/query_memories.py --stats"
+echo "  python3 ~/.claude/memory-hooks/query_memories.py --topic \"bugs fixes\""
+echo "  python3 ~/.claude/memory-hooks/query_memories.py --keywords error crash"
+echo "  python3 ~/.claude/memory-hooks/query_memories.py --files-involved"
 echo ""
 echo "📚 Documentation: $SCRIPT_DIR/docs/"
 echo "🐛 Debug log: ~/.claude/memory_hooks_debug.log"
