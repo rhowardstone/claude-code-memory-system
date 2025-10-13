@@ -1,0 +1,14 @@
+# Memory Preservation System Dependencies
+# Fast vector database with built-in embeddings
+chromadb>=0.4.0
+
+# Efficient sentence embeddings (local, no API calls)
+sentence-transformers>=2.2.0
+
+# JSON Lines parsing
+jsonlines>=3.0.0
+
+# Clustering and numerical operations
+scikit-learn>=1.3.0
+scipy>=1.11.0
+numpy>=1.24.0
