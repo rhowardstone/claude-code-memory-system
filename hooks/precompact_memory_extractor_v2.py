@@ -31,7 +31,7 @@ except ImportError as e:
 
 # Configuration
 MEMORY_DB_PATH = Path.home() / ".claude" / "memory_db"
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+EMBEDDING_MODEL = "nomic-ai/nomic-embed-text-v1.5"  # 768d, 8192 token context
 MAX_TRANSCRIPT_MESSAGES = 1000  # Increased from 100 to capture full conversations
 DEBUG_LOG = Path.home() / ".claude" / "memory_hooks_debug.log"
 AUTO_PRUNE = True  # Auto-prune on each compaction
@@ -166,55 +166,47 @@ def chunk_conversation(transcript_text: str) -> List[Dict[str, str]]:
 
 
 def _build_smart_chunk(parts: Dict[str, List[str]]) -> Dict[str, str]:
-    """Build intelligent chunk from conversation parts."""
+    """Build intelligent chunk with full content and proper framing."""
     if not parts["user"] and not parts["assistant"]:
         return None
 
-    # Extract intent from user messages
+    # Extract FULL intent from user messages (no truncation)
     user_text = " ".join(parts["user"])
     if not user_text:
         intent = "Continue previous task"
-    elif len(user_text) < 100:
-        intent = user_text
     else:
-        # Extract first sentence or question
-        sentences = user_text.split(".")
-        intent = sentences[0][:200] if sentences else user_text[:200]
+        intent = user_text  # Store full user text
 
-    # Build action from assistant responses and tools
+    # Build FULL action from assistant responses and tools
     assistant_text = " ".join(parts["assistant"])
     tools_text = " ".join(parts["tools"])
 
-    # Detect what was actually done
+    # Build action description
     action_parts = []
+
+    # Add tool summary
+    tool_summary = []
     if "Write" in parts["tool_names"]:
-        action_parts.append("Created/wrote files")
+        tool_summary.append("created/wrote files")
     if "Edit" in parts["tool_names"]:
-        action_parts.append("Modified files")
+        tool_summary.append("modified files")
     if "Read" in parts["tool_names"]:
-        action_parts.append("Analyzed code")
+        tool_summary.append("analyzed code")
     if "Bash" in parts["tool_names"]:
-        action_parts.append("Executed commands")
+        tool_summary.append("executed commands")
 
-    # Add key explanation from assistant
+    if tool_summary:
+        action_parts.append(f"Tools used: {', '.join(tool_summary)}")
+
+    # Add full assistant explanation
     if assistant_text:
-        # Find decision/explanation sentences
-        key_phrases = []
-        for sentence in assistant_text.split("."):
-            lower = sentence.lower()
-            if any(marker in lower for marker in ["decided", "implement", "create", "will", "let me", "I'll"]):
-                key_phrases.append(sentence.strip())
-                if len(key_phrases) >= 2:
-                    break
+        action_parts.append(f"Response: {assistant_text}")
 
-        if key_phrases:
-            action_parts.extend(key_phrases[:2])
-        elif len(assistant_text) < 300:
-            action_parts.append(assistant_text)
-        else:
-            action_parts.append(assistant_text[:300] + "...")
+    # Add tools detail if present
+    if tools_text:
+        action_parts.append(f"Operations: {tools_text}")
 
-    action = " - ".join(action_parts) if action_parts else tools_text[:500]
+    action = "\n".join(action_parts) if action_parts else "No action recorded"
 
     # Detect outcome
     combined_text = (assistant_text + " " + tools_text).lower()
@@ -227,16 +219,22 @@ def _build_smart_chunk(parts: Dict[str, List[str]]) -> Dict[str, str]:
     else:
         outcome = "Discussion/planning"
 
-    # Build summary
-    summary = f"{intent[:150]}"
-    if action_parts:
-        summary += f" → {action_parts[0][:150]}"
+    # Build properly framed summary for display
+    # This is what gets shown - make it informative but readable
+    intent_summary = intent if len(intent) <= 200 else intent[:197] + "..."
+
+    # Get key action points (first 300 chars of assistant text)
+    action_summary = assistant_text[:300] if assistant_text else f"Used {len(parts['tools'])} tools"
+    if len(assistant_text) > 300:
+        action_summary += "..."
+
+    summary = f"Intent: {intent_summary}\nAction: {action_summary}\nOutcome: {outcome}"
 
     return {
-        "intent": intent[:500],
-        "action": action[:1000],
-        "outcome": outcome[:300],
-        "summary": summary[:500]
+        "intent": intent,  # Full user text, no truncation
+        "action": action,  # Full action with framing, no truncation
+        "outcome": outcome,  # Outcome description
+        "summary": summary  # Framed summary for display
     }
 
 
@@ -249,7 +247,7 @@ def store_enhanced_chunks(chunks: List[Dict[str, str]], session_id: str):
             metadata={"hnsw:space": "cosine"}
         )
 
-        embedding_model = SentenceTransformer(EMBEDDING_MODEL)
+        embedding_model = SentenceTransformer(EMBEDDING_MODEL, trust_remote_code=True)
         timestamp = datetime.now().isoformat()
 
         documents = []
