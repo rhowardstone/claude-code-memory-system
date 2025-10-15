@@ -3,20 +3,20 @@
     "scenario": "Auth System Implementation",
     "passed": false,
     "carryover": 0.3333333333333333,
-    "consistency": 0.30952380952380953,
-    "precision": 1.6666666666666667,
-    "recall": 0.30952380952380953,
-    "f1": 0.5166666666666667,
-    "time": 6.1613452434539795
+    "consistency": 0.4523809523809524,
+    "precision": 1.0,
+    "recall": 0.4523809523809524,
+    "f1": 0.6222222222222222,
+    "time": 2.778278350830078
   },
   {
     "scenario": "Multi-Session Bug Investigation",
     "passed": false,
-    "carryover": 0.3333333333333333,
-    "consistency": 0.45634920634920634,
-    "precision": 2.3333333333333335,
-    "recall": 0.45634920634920634,
-    "f1": 0.7571428571428571,
-    "time": 2.3016514778137207
+    "carryover": 0.7777777777777777,
+    "consistency": 0.6626984126984127,
+    "precision": 0.3833333333333333,
+    "recall": 0.6626984126984127,
+    "f1": 0.4694444444444444,
+    "time": 2.394318103790283
   }
 ]

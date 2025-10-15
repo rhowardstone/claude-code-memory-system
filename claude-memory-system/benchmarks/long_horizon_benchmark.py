@@ -364,10 +364,11 @@ class LongHorizonBenchmark:
         query = session["query"]
         query_embedding = self.embedding_model.encode(query).tolist()
 
+        # CRITICAL: No session_id filter! This simulates cross-session retrieval after compaction
+        # Each compaction creates a NEW session, so we MUST retrieve from previous sessions
         results = self.collection.query(
             query_embeddings=[query_embedding],
-            n_results=10,
-            where={"session_id": session_id}
+            n_results=10  # Retrieve from ALL sessions
         )
 
         retrieved_texts = results["documents"][0] if results["documents"] else []
@@ -377,20 +378,45 @@ class LongHorizonBenchmark:
         expected_from_prev = session.get("expected_from_previous", [])
         all_expected = expected_keywords + expected_from_prev
 
-        # Precision: % of retrieved that are relevant
-        # Recall: % of relevant that were retrieved
+        # FIXED: Proper precision/recall calculation (per-document relevance)
+        # Precision: % of retrieved documents that are relevant
+        # Recall: % of relevant keywords found in any retrieved document
         # F1: Harmonic mean
 
-        retrieved_text = " ".join(retrieved_texts).lower()
+        # Check which retrieved documents contain expected keywords
+        relevant_docs = 0
+        keywords_found = set()
 
-        relevant_retrieved = sum(1 for kw in all_expected if kw.lower() in retrieved_text)
-        precision = relevant_retrieved / len(retrieved_texts) if retrieved_texts else 0.0
-        recall = relevant_retrieved / len(all_expected) if all_expected else 1.0
+        for doc in retrieved_texts:
+            doc_lower = doc.lower()
+            # Check if this document is relevant (contains any expected keyword)
+            is_relevant = any(kw.lower() in doc_lower for kw in all_expected)
+            if is_relevant:
+                relevant_docs += 1
+
+            # Track which keywords we found (for recall calculation)
+            for kw in all_expected:
+                if kw.lower() in doc_lower:
+                    keywords_found.add(kw.lower())
+
+        # Precision: fraction of retrieved docs that are relevant
+        precision = relevant_docs / len(retrieved_texts) if retrieved_texts else 0.0
+
+        # Recall: fraction of expected keywords that were found
+        recall = len(keywords_found) / len(all_expected) if all_expected else 1.0
+
+        # F1: harmonic mean
         f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
 
         # Session carryover: Did we retrieve memories from previous sessions?
-        prev_memory_found = sum(1 for kw in expected_from_prev if kw.lower() in retrieved_text)
-        carryover_rate = prev_memory_found / len(expected_from_prev) if expected_from_prev else 1.0
+        prev_keywords_found = set()
+        for doc in retrieved_texts:
+            doc_lower = doc.lower()
+            for kw in expected_from_prev:
+                if kw.lower() in doc_lower:
+                    prev_keywords_found.add(kw.lower())
+
+        carryover_rate = len(prev_keywords_found) / len(expected_from_prev) if expected_from_prev else 1.0
 
         elapsed = time.time() - start_time
 
@@ -401,7 +427,8 @@ class LongHorizonBenchmark:
             "carryover_rate": carryover_rate,
             "retrieved_count": len(retrieved_texts),
             "expected_count": len(all_expected),
-            "relevant_retrieved": relevant_retrieved
+            "relevant_retrieved": relevant_docs,  # Number of relevant documents retrieved
+            "keywords_found": len(keywords_found)  # Number of unique keywords found
         }
 
         return metrics, elapsed

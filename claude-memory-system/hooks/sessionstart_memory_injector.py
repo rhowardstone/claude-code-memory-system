@@ -316,21 +316,23 @@ def get_relevant_memories_with_task_context(
     Adaptive K retrieval WITH task-context scoring.
 
     Steps:
-    1. Semantic search to get candidates (using nomic-embed)
+    1. Semantic search to get candidates (using nomic-embed) FROM ALL SESSIONS
     2. Extract task entities from query
     3. Score candidates with task-context boost
     4. Apply adaptive K based on quality
     5. Return 0-max_results memories
+
+    CRITICAL: Searches across ALL sessions to enable cross-compaction memory retrieval!
     """
     try:
         embedding_model = SentenceTransformer(EMBEDDING_MODEL, trust_remote_code=True)
         query_embedding = embedding_model.encode(query_text).tolist()
 
-        # Get candidates with semantic search
+        # Get candidates with semantic search (CROSS-SESSION: No session_id filter!)
+        # This allows retrieval of memories from previous sessions after compaction
         results = collection.query(
             query_embeddings=[query_embedding],
-            n_results=50,  # Get plenty of candidates
-            where={"session_id": session_id}
+            n_results=50  # Get plenty of candidates from ALL sessions
         )
 
         if not results or not results.get("metadatas") or not results["metadatas"][0]:
