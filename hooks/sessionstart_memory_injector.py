@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """
-SessionStart Memory Injector V5 - Task-Context Aware with Knowledge Graph
-==========================================================================
-Combines Phase 1 + Phase 2 improvements:
+SessionStart Memory Injector - Task-Context Aware with Knowledge Graph
+=======================================================================
+Version: See __version__.py
 
-Phase 1 (V4):
+Features:
 - nomic-embed-text-v1.5 (768-dim, 8192 token context)
 - Adaptive K retrieval (0-20 memories based on quality)
 - Full transcript storage with proper framing
-
-Phase 2 (NEW):
 - Knowledge graph integration
 - Task-context aware scoring
 - Entity extraction from query
@@ -33,6 +31,7 @@ from typing import List, Dict, Any
 import time
 
 try:
+    from __version__ import __version__, SESSIONSTART_VERSION
     import chromadb
     from sentence_transformers import SentenceTransformer
     from knowledge_graph import MemoryKnowledgeGraph
@@ -62,7 +61,7 @@ def debug_log(msg: str):
     try:
         with open(DEBUG_LOG, "a") as f:
             timestamp = datetime.now().isoformat()
-            f.write(f"[{timestamp}] [SessionStart-V5] {msg}\n")
+            f.write(f"[{timestamp}] [SessionStart-{SESSIONSTART_VERSION}] {msg}\n")
     except Exception:
         pass
 
@@ -363,7 +362,7 @@ def format_enhanced_context(recent_memories: List[Dict], relevant_memories: List
     """Format with query tool availability and smart summaries."""
     parts = []
 
-    parts.append("# 🧠 Memory Context Restored (V5: Task-Context Aware)")
+    parts.append(f"# 🧠 Memory Context Restored ({SESSIONSTART_VERSION}: Task-Context Aware)")
     parts.append("")
     parts.append("## 🔍 Memory Query Tools Available")
     parts.append("")
@@ -412,20 +411,20 @@ def format_enhanced_context(recent_memories: List[Dict], relevant_memories: List
                 parts.append(format_memory_entry(mem, i, show_similarity=True))
 
     parts.append("---")
-    parts.append("*Memory System V5: Task-context aware with knowledge graph*")
+    parts.append(f"*Memory System {SESSIONSTART_VERSION}: Task-context aware with knowledge graph*")
 
     return "\n".join(parts)
 
 
 def main():
-    """V5 SessionStart injection with task-context awareness."""
+    """SessionStart injection with task-context awareness."""
     try:
         input_data = json.load(sys.stdin)
 
         session_id = input_data.get("session_id", "unknown")
         trigger = input_data.get("trigger", "compact")
 
-        debug_log(f"SessionStart-V5 triggered: session={session_id}, trigger={trigger}")
+        debug_log(f"SessionStart-{SESSIONSTART_VERSION} triggered: session={session_id}, trigger={trigger}")
 
         if not MEMORY_DB_PATH.exists():
             debug_log("No memory database found")
@@ -468,7 +467,7 @@ def main():
         }
 
         print(json.dumps(output))
-        debug_log(f"Injected {len(recent_memories)} recent + {len(relevant_memories)} relevant (V5 task-aware)")
+        debug_log(f"Injected {len(recent_memories)} recent + {len(relevant_memories)} relevant ({SESSIONSTART_VERSION} task-aware)")
 
     except Exception as e:
         debug_log(f"Unexpected error: {e}")

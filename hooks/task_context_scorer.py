@@ -16,7 +16,7 @@ Example:
     Entities extracted: ["adaptive K", "retrieval", "bugs"]
 
     Graph traversal finds related:
-    - sessionstart_memory_injector_v5.py (implements adaptive K + task-context)
+    - sessionstart_memory_injector.py (implements adaptive K + task-context)
     - nomic-embed (used by retrieval)
     - ChromaDB (storage for retrieval)
 

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-PreCompact Memory Extractor V2 - Enhanced with all features
-============================================================
+PreCompact Memory Extractor - Enhanced with all features
+=========================================================
+Version: See __version__.py
+
 Integrates:
 - Importance scoring
 - Multi-modal artifact extraction
@@ -18,6 +20,7 @@ from typing import List, Dict, Any
 import jsonlines
 
 try:
+    from __version__ import __version__, PRECOMPACT_VERSION
     import chromadb
     from sentence_transformers import SentenceTransformer
     from memory_scorer import MemoryScorer, score_chunks
@@ -42,7 +45,7 @@ def debug_log(msg: str):
     try:
         with open(DEBUG_LOG, "a") as f:
             timestamp = datetime.now().isoformat()
-            f.write(f"[{timestamp}] [PreCompact-V2] {msg}\n")
+            f.write(f"[{timestamp}] [PreCompact-{PRECOMPACT_VERSION}] {msg}\n")
     except Exception:
         pass
 
@@ -263,8 +266,22 @@ def store_enhanced_chunks(chunks: List[Dict[str, str]], session_id: str):
             score = MemoryScorer.score_chunk(chunk, {"timestamp": timestamp, "tool_count": i + 1})
             importance_category = MemoryScorer.categorize_importance(score)
 
-            # Step 3: Create enhanced embedding text
-            embedding_text = enriched["enhanced_summary"]
+            # Step 3: Create CONTEXTUAL embedding text (V7 improvement)
+            # Include session, time, and file context for better retrieval
+            artifacts = enriched["metadata"]["artifacts"]
+            file_paths = artifacts.get("file_paths", [])[:5]  # Top 5 files
+            file_context = f"Files: {', '.join(file_paths)}" if file_paths else ""
+
+            # Format timestamp for readability
+            try:
+                ts_obj = datetime.fromisoformat(timestamp)
+                time_context = ts_obj.strftime("%Y-%m-%d %H:%M")
+            except:
+                time_context = timestamp[:19]  # Just date/time part
+
+            # Build contextual embedding text
+            contextual_prefix = f"Session {session_id[:8]} at {time_context}. {file_context}. "
+            embedding_text = contextual_prefix + enriched["enhanced_summary"]
             embedding = embedding_model.encode(embedding_text).tolist()
 
             # Step 4: Prepare for storage
@@ -323,7 +340,7 @@ def main():
         transcript_path = input_data.get("transcript_path", "")
         trigger = input_data.get("trigger", "unknown")
 
-        debug_log(f"PreCompact-V2 triggered: session={session_id}, trigger={trigger}")
+        debug_log(f"PreCompact-{PRECOMPACT_VERSION} triggered: session={session_id}, trigger={trigger}")
 
         if not transcript_path:
             debug_log("No transcript path")
