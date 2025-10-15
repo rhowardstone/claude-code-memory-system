@@ -49,3 +49,4 @@ memory_hooks_debug.log
 # Distribution
 *.tar.gz
 *.zip
+swe-bench-env/
