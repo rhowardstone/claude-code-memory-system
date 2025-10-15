@@ -1,11 +1,11 @@
 #!/bin/bash
-# Claude Code Memory System V6 - Installation Script
+# Claude Code Memory System V7 - Installation Script
 # Installs memory hooks and updates settings without overwriting existing config
 
 set -e
 
 echo "========================================================================="
-echo "Claude Code Memory System V6 - Installer"
+echo "Claude Code Memory System V7 - Installer"
 echo "========================================================================="
 echo ""
 echo "This will install:"
@@ -119,7 +119,7 @@ if [ ! -f "$SETTINGS_FILE" ]; then
   }
 }
 EOF
-    echo "✓ Created settings.json with memory hooks (V6)"
+    echo "✓ Created settings.json with memory hooks (V7)"
 else
     echo "Updating existing settings.json..."
 
@@ -169,7 +169,7 @@ settings["hooks"]["SessionStart"] = [
 with open(settings_path, 'w') as f:
     json.dump(settings, f, indent=2)
 
-print("✓ Settings updated successfully (V6)")
+print("✓ Settings updated successfully (V7)")
 PYEOF
 
     if [ $? -ne 0 ]; then
@@ -180,14 +180,14 @@ fi
 
 echo ""
 echo "========================================================================="
-echo "✅ Installation Complete - V6 with Clean Architecture!"
+echo "✅ Installation Complete - V7 with Contextual Embeddings + Last Actions!"
 echo "========================================================================="
 echo ""
 echo "Memory system installed successfully!"
 echo ""
 echo "📊 What's been installed:"
-echo "  • PreCompact: Extracts FULL transcripts (not truncated!)"
-echo "  • SessionStart: Task-context aware with knowledge graph"
+echo "  • PreCompact: Extracts FULL transcripts + last actions before compaction"
+echo "  • SessionStart: Shows 'Where You Left Off' + task-context aware retrieval"
 echo "  • Entity extraction: FILES, FUNCTIONS, BUGS, FEATURES, etc."
 echo "  • Knowledge graph: NetworkX with PageRank centrality"
 echo "  • Task-context scoring: Boosts memories relevant to current work"

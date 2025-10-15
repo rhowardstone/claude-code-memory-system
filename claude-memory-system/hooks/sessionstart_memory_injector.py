@@ -90,6 +90,83 @@ def get_or_build_knowledge_graph() -> MemoryKnowledgeGraph:
     return kg
 
 
+def retrieve_last_actions(client, session_id: str) -> Dict[str, Any]:
+    """Retrieve last actions before compaction from session_state collection."""
+    try:
+        collection = client.get_or_create_collection(
+            name="session_state",
+            metadata={"description": "Last actions before compaction for each session"}
+        )
+
+        results = collection.get(
+            ids=[f"last_actions_{session_id}"],
+            limit=1
+        )
+
+        if results and results.get("documents") and len(results["documents"]) > 0:
+            last_actions = json.loads(results["documents"][0])
+            debug_log(f"Retrieved last actions for session {session_id[:8]}")
+            return last_actions
+        else:
+            debug_log(f"No last actions found for session {session_id[:8]}")
+            return {}
+
+    except Exception as e:
+        debug_log(f"Error retrieving last actions: {e}")
+        return {}
+
+
+def format_last_actions_section(last_actions: Dict[str, Any]) -> str:
+    """Format 'Where You Left Off' section from last actions."""
+    if not last_actions:
+        return ""
+
+    parts = []
+    parts.append("## 🎯 Where You Left Off")
+    parts.append("")
+    parts.append("*Last actions before compaction:*")
+    parts.append("")
+
+    # Last user message
+    if last_actions.get("last_user_message"):
+        parts.append(f"**Your Last Request**: {last_actions['last_user_message']}")
+        parts.append("")
+
+    # Last tool calls
+    tool_calls = last_actions.get("last_tool_calls", [])
+    if tool_calls:
+        parts.append("**Recent Actions**:")
+        for i, tool_call in enumerate(tool_calls[:5], 1):
+            tool_name = tool_call.get("tool", "unknown")
+            file_path = tool_call.get("file", "")
+
+            if file_path:
+                parts.append(f"{i}. `{tool_name}` → `{file_path}`")
+            else:
+                parts.append(f"{i}. `{tool_name}`")
+        parts.append("")
+
+    # Files modified
+    files = last_actions.get("files_modified", [])
+    if files:
+        files_str = ", ".join(f"`{f}`" for f in files[:5])
+        if len(files) > 5:
+            files_str += f" +{len(files) - 5} more"
+        parts.append(f"**Files Modified**: {files_str}")
+        parts.append("")
+
+    # Outcome
+    outcome = last_actions.get("last_outcome", "")
+    if outcome:
+        parts.append(f"**Status**: {outcome}")
+        parts.append("")
+
+    parts.append("---")
+    parts.append("")
+
+    return "\n".join(parts)
+
+
 def extract_smart_summary(metadata: Dict[str, Any], document: str) -> Dict[str, Any]:
     """Extract smart summary from memory with artifact details."""
     summary = {
@@ -358,12 +435,19 @@ def format_memory_entry(mem: Dict[str, Any], index: int, show_similarity: bool =
     return "\n".join(parts)
 
 
-def format_enhanced_context(recent_memories: List[Dict], relevant_memories: List[Dict]) -> str:
-    """Format with query tool availability and smart summaries."""
+def format_enhanced_context(recent_memories: List[Dict], relevant_memories: List[Dict], last_actions: Dict[str, Any] = None) -> str:
+    """Format with query tool availability, last actions, and smart summaries."""
     parts = []
 
     parts.append(f"# 🧠 Memory Context Restored ({SESSIONSTART_VERSION}: Task-Context Aware)")
     parts.append("")
+
+    # Show "Where You Left Off" section first if available
+    if last_actions:
+        last_actions_section = format_last_actions_section(last_actions)
+        if last_actions_section:
+            parts.append(last_actions_section)
+
     parts.append("## 🔍 Memory Query Tools Available")
     parts.append("")
     parts.append("You can query the memory database proactively using:")
@@ -417,7 +501,7 @@ def format_enhanced_context(recent_memories: List[Dict], relevant_memories: List
 
 
 def main():
-    """SessionStart injection with task-context awareness."""
+    """SessionStart injection with task-context awareness and last actions."""
     try:
         input_data = json.load(sys.stdin)
 
@@ -438,6 +522,9 @@ def main():
             debug_log("Memory collection not found")
             sys.exit(0)
 
+        # Retrieve last actions before compaction
+        last_actions = retrieve_last_actions(client, session_id)
+
         # Build/get knowledge graph
         kg = get_or_build_knowledge_graph()
 
@@ -452,12 +539,12 @@ def main():
         )
         debug_log(f"Retrieved {len(relevant_memories)} relevant memories with task-context scoring")
 
-        if not recent_memories and not relevant_memories:
-            debug_log("No high-importance memories to inject")
+        if not recent_memories and not relevant_memories and not last_actions:
+            debug_log("No high-importance memories or last actions to inject")
             sys.exit(0)
 
-        # Format smart context
-        additional_context = format_enhanced_context(recent_memories, relevant_memories)
+        # Format smart context with last actions
+        additional_context = format_enhanced_context(recent_memories, relevant_memories, last_actions)
 
         output = {
             "hookSpecificOutput": {
@@ -467,7 +554,9 @@ def main():
         }
 
         print(json.dumps(output))
-        debug_log(f"Injected {len(recent_memories)} recent + {len(relevant_memories)} relevant ({SESSIONSTART_VERSION} task-aware)")
+
+        last_actions_msg = f" + last actions" if last_actions else ""
+        debug_log(f"Injected {len(recent_memories)} recent + {len(relevant_memories)} relevant{last_actions_msg} ({SESSIONSTART_VERSION} task-aware)")
 
     except Exception as e:
         debug_log(f"Unexpected error: {e}")

@@ -8,8 +8,8 @@ __version__ = "7.0.0"
 __version_info__ = (7, 0, 0)
 
 # Component versions (for reference)
-PRECOMPACT_VERSION = "5.0"  # V5: Contextual embeddings
-SESSIONSTART_VERSION = "5.0"  # V5: Task-context aware with knowledge graph
+PRECOMPACT_VERSION = "7.0"  # V7: Contextual embeddings + Last Actions
+SESSIONSTART_VERSION = "7.0"  # V7: Task-context aware with Last Actions display
 QUERY_TOOL_VERSION = "1.0"
 KNOWLEDGE_GRAPH_VERSION = "1.0"
 EVALUATION_VERSION = "1.0"  # V7: New evaluation framework

@@ -331,6 +331,110 @@ def store_enhanced_chunks(chunks: List[Dict[str, str]], session_id: str):
         debug_log(f"Error storing chunks: {e}")
 
 
+def extract_last_actions(messages: List[Dict[str, Any]], chunks: List[Dict[str, str]], max_actions: int = 5) -> Dict[str, Any]:
+    """
+    Extract the last N actions before compaction for "Where You Left Off" summary.
+
+    Returns summary with:
+    - Last user message
+    - Last N tool calls with file paths
+    - Files modified in last chunk
+    - Overall outcome
+    """
+    if not messages or not chunks:
+        return {}
+
+    # Get last chunk for context
+    last_chunk = chunks[-1]
+
+    # Extract last N tool calls from messages
+    tool_calls = []
+    for msg in reversed(messages[-50:]):  # Check last 50 messages
+        actual_msg = msg.get("message", msg)
+        if actual_msg.get("role") == "assistant":
+            content = actual_msg.get("content", [])
+            if isinstance(content, list):
+                for block in reversed(content):
+                    if block.get("type") == "tool_use":
+                        tool_name = block.get("name", "unknown")
+                        tool_input = block.get("input", {})
+
+                        # Extract file path if present
+                        file_path = tool_input.get("file_path", "")
+
+                        tool_calls.append({
+                            "tool": tool_name,
+                            "file": file_path,
+                            "input": tool_input
+                        })
+
+                        if len(tool_calls) >= max_actions:
+                            break
+        if len(tool_calls) >= max_actions:
+            break
+
+    # Reverse to get chronological order
+    tool_calls.reverse()
+
+    # Get last user message
+    last_user_msg = ""
+    for msg in reversed(messages[-20:]):
+        actual_msg = msg.get("message", msg)
+        if actual_msg.get("role") == "user":
+            content = actual_msg.get("content", [])
+            if isinstance(content, list):
+                text_parts = [c.get("text", "") for c in content if c.get("type") == "text"]
+                last_user_msg = ' '.join(text_parts)[:200]
+            else:
+                last_user_msg = str(content)[:200]
+            break
+
+    # Extract files from last chunk's artifacts
+    files_modified = []
+    try:
+        artifacts_json = json.loads(last_chunk.get("artifacts", "{}")) if isinstance(last_chunk.get("artifacts"), str) else last_chunk.get("artifacts", {})
+        files_modified = artifacts_json.get("file_paths", [])[:5]
+    except:
+        pass
+
+    return {
+        "last_user_message": last_user_msg,
+        "last_tool_calls": tool_calls,
+        "files_modified": files_modified,
+        "last_outcome": last_chunk.get("outcome", ""),
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+def store_last_actions(session_id: str, last_actions: Dict[str, Any]):
+    """Store last actions in a separate ChromaDB collection for fast SessionStart retrieval."""
+    try:
+        if not last_actions:
+            return
+
+        client = chromadb.PersistentClient(path=str(MEMORY_DB_PATH))
+        collection = client.get_or_create_collection(
+            name="session_state",
+            metadata={"description": "Last actions before compaction for each session"}
+        )
+
+        # Store as single document per session (upsert)
+        collection.upsert(
+            documents=[json.dumps(last_actions)],
+            metadatas=[{
+                "session_id": session_id,
+                "timestamp": last_actions.get("timestamp", ""),
+                "type": "last_actions"
+            }],
+            ids=[f"last_actions_{session_id}"]
+        )
+
+        debug_log(f"Stored last actions summary for session {session_id[:8]}")
+
+    except Exception as e:
+        debug_log(f"Error storing last actions: {e}")
+
+
 def main():
     """Main PreCompact hook logic with all enhancements."""
     try:
@@ -365,8 +469,14 @@ def main():
             debug_log("No chunks generated")
             sys.exit(0)
 
+        # Extract last actions summary (for SessionStart "Where You Left Off")
+        last_actions = extract_last_actions(messages, chunks)
+
         # Store with all enhancements
         store_enhanced_chunks(chunks, session_id)
+
+        # Store last actions separately for quick SessionStart retrieval
+        store_last_actions(session_id, last_actions)
 
         # Show message to user
         output = {

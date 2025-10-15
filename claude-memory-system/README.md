@@ -1,14 +1,27 @@
-# Claude Code Memory System V5
+# Claude Code Memory System V7
 
-**Intelligent memory preservation system with knowledge graph and task-context awareness.**
+**Intelligent memory preservation system with contextual embeddings, knowledge graphs, and task-context awareness.**
 
-Stop losing context when your conversations get compacted! This system automatically extracts, scores, and preserves important memories from your coding sessions, then intelligently injects the most relevant ones back using knowledge graph traversal and task-context scoring.
+Stop losing context when your conversations get compacted! This system automatically extracts, scores, and preserves important memories from your coding sessions, then intelligently injects the most relevant ones back using contextual embeddings, knowledge graph traversal, and task-context scoring.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
 ## 🌟 Features
+
+### V7: Contextual Embeddings + Last Actions
+- **🎯 "Where You Left Off"**: Shows last 5 actions, files, and status before compaction (the "50 First Dates" solution!)
+- **📝 Contextual Embeddings**: Prepends session/time/file context to embeddings for better retrieval
+- **⏰ Temporal Queries**: Find "yesterday's work" or "last week's changes" naturally
+- **📁 File-Context Queries**: Search "auth.py changes" or "modifications to utils.py"
+- **📊 Evaluation Framework**: Precision, Recall, F1, MRR metrics for measuring quality
+- **✅ Test Suite**: 293 tests, 49% coverage across critical components
+
+### V6: Clean Architecture + Centralized Versioning
+- **📦 No Version Suffixes**: Clean filenames (precompact.py, not precompact_v2.py)
+- **🔢 Centralized Versions**: All versions tracked in __version__.py
+- **📋 Proper Semantic Versioning**: Major.Minor.Patch format
 
 ### V5: Knowledge Graph + Task-Context Awareness
 - **🕸️ Knowledge Graph**: Automatically extracts entities (files, functions, bugs, features) and builds relationship graph

@@ -55,6 +55,18 @@ Build a **vector-based memory preservation system** for Claude Code that survive
 ## Scratchpad
 ------------- DO NOT WRITE ABOVE THIS LINE --------------
 
+### ⚠️ CRITICAL REMINDERS
+
+**Git Repository**: `https://github.com/rhowardstone/claude-code-memory-system`
+- ❌ NOT claude-code (that's just a reference copy)
+- ✅ The actual repo is: `claude-code-memory-system`
+
+**Git Identity**:
+- Name: Rye Howard-Stone
+- Email: Rye.Howard-Stone@UConn.edu
+
+---
+
 ### System Architecture (V7)
 
 **Location**: `/atb-data/claude-code/claude-code/claude-memory-system/`

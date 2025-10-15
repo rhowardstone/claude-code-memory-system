@@ -1,0 +1,30 @@
+Build a complete workout app called IronFlow with these features:
+
+# Core Requirements
+1. Exercise selection algorithm with muscle coverage
+2. Volume targeting system (8-20 sets per muscle per week based on experience)
+3. Double progression with load bias
+4. Recovery tracking using sleep and activity data
+5. Plate math calculator
+6. Postgres database with JSONB for state
+7. Offline-first with sync queue
+
+# Architecture Decisions Needed
+- TypeScript backend with gRPC for plan engine
+- React Native for mobile
+- How to handle conflicting offline edits?
+- Which recovery formula to use?
+
+# Files to Create
+- src/algorithms/exercise_selection.ts
+- src/algorithms/volume_targets.ts
+- src/algorithms/progression.ts
+- src/algorithms/recovery.ts
+- src/utils/plate_math.ts
+- migrations/001_initial_schema.sql
+- docs/sync_strategy.md
+
+Please implement this step by step, making architectural decisions as you go.
+Ask clarifying questions when needed.
+Write tests for the algorithms.
+Explain your reasoning for key decisions.
