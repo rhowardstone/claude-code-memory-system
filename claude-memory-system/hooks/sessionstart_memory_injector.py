@@ -116,6 +116,62 @@ def retrieve_last_actions(client, session_id: str) -> Dict[str, Any]:
         return {}
 
 
+def get_memory_statistics(client, collection, kg: MemoryKnowledgeGraph, session_id: str) -> Dict[str, Any]:
+    """Gather memory database statistics."""
+    stats = {
+        "total_memories": 0,
+        "session_memories": 0,
+        "high_importance": 0,
+        "graph_nodes": 0,
+        "graph_edges": 0
+    }
+
+    try:
+        # Get total memories
+        all_results = collection.get(limit=10000)
+        stats["total_memories"] = len(all_results.get("ids", []))
+
+        # Get session-specific memories
+        session_results = collection.get(
+            where={"session_id": session_id},
+            limit=1000
+        )
+        stats["session_memories"] = len(session_results.get("ids", []))
+
+        # Count high importance memories (>= 15.0)
+        if session_results.get("metadatas"):
+            stats["high_importance"] = sum(
+                1 for m in session_results["metadatas"]
+                if m.get("importance_score", 0) >= 15.0
+            )
+
+        # Knowledge graph stats
+        if kg:
+            stats["graph_nodes"] = kg.graph.number_of_nodes()
+            stats["graph_edges"] = kg.graph.number_of_edges()
+
+    except Exception as e:
+        debug_log(f"Error gathering statistics: {e}")
+
+    return stats
+
+
+def format_statistics_section(stats: Dict[str, Any]) -> str:
+    """Format memory statistics section."""
+    parts = []
+    parts.append("## 📊 Memory Database Status")
+    parts.append("")
+    parts.append(f"• **Total Memories**: {stats['total_memories']} stored")
+    parts.append(f"• **This Session**: {stats['session_memories']} memories")
+    parts.append(f"• **High Priority**: {stats['high_importance']} critical memories (≥15.0 importance)")
+    parts.append(f"• **Knowledge Graph**: {stats['graph_nodes']} entities, {stats['graph_edges']} relationships")
+    parts.append("")
+    parts.append("---")
+    parts.append("")
+
+    return "\n".join(parts)
+
+
 def format_last_actions_section(last_actions: Dict[str, Any]) -> str:
     """Format 'Where You Left Off' section from last actions."""
     if not last_actions:
@@ -435,14 +491,20 @@ def format_memory_entry(mem: Dict[str, Any], index: int, show_similarity: bool =
     return "\n".join(parts)
 
 
-def format_enhanced_context(recent_memories: List[Dict], relevant_memories: List[Dict], last_actions: Dict[str, Any] = None) -> str:
-    """Format with query tool availability, last actions, and smart summaries."""
+def format_enhanced_context(recent_memories: List[Dict], relevant_memories: List[Dict], last_actions: Dict[str, Any] = None, stats: Dict[str, Any] = None) -> str:
+    """Format with statistics, query tools, last actions, and smart summaries."""
     parts = []
 
     parts.append(f"# 🧠 Memory Context Restored ({SESSIONSTART_VERSION}: Task-Context Aware)")
     parts.append("")
 
-    # Show "Where You Left Off" section first if available
+    # Show database statistics first
+    if stats:
+        stats_section = format_statistics_section(stats)
+        if stats_section:
+            parts.append(stats_section)
+
+    # Show "Where You Left Off" section
     if last_actions:
         last_actions_section = format_last_actions_section(last_actions)
         if last_actions_section:
@@ -522,11 +584,14 @@ def main():
             debug_log("Memory collection not found")
             sys.exit(0)
 
-        # Retrieve last actions before compaction
-        last_actions = retrieve_last_actions(client, session_id)
-
         # Build/get knowledge graph
         kg = get_or_build_knowledge_graph()
+
+        # Gather memory statistics
+        stats = get_memory_statistics(client, collection, kg, session_id)
+
+        # Retrieve last actions before compaction
+        last_actions = retrieve_last_actions(client, session_id)
 
         # Get high-quality memories
         recent_memories = get_important_recent_memories(collection, session_id, RECENT_MEMORIES)
@@ -543,8 +608,8 @@ def main():
             debug_log("No high-importance memories or last actions to inject")
             sys.exit(0)
 
-        # Format smart context with last actions
-        additional_context = format_enhanced_context(recent_memories, relevant_memories, last_actions)
+        # Format smart context with stats, last actions, and memories
+        additional_context = format_enhanced_context(recent_memories, relevant_memories, last_actions, stats)
 
         output = {
             "hookSpecificOutput": {
