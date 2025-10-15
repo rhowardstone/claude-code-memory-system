@@ -461,3 +461,70 @@ Session 2: "Add OAuth to auth system"
 - "IronFlow project" (project-specific)
 
 **Evaluation Script**: `hooks/evaluate_retrieval.py` (V7)
+
+---
+
+### Test Suite (V7)
+
+**Comprehensive test coverage** for the memory system with focus on critical paths.
+
+**Test Statistics**:
+- **293 tests** across 8 test files
+- **49% overall coverage** (940 of 1,930 statements)
+- All tests passing with pytest + pytest-cov
+
+**Module Coverage Highlights**:
+| Module | Coverage | Tests | Status |
+|--------|----------|-------|--------|
+| multimodal_extractor.py | **90%** | 46 | ✅ Excellent |
+| memory_scorer.py | **86%** | 48 | ✅ Excellent |
+| knowledge_graph.py | **82%** | 53 | ✅ Excellent |
+| precompact_memory_extractor.py | **79%** | 28 | ✅ Strong |
+| sessionstart_memory_injector.py | **75%** | 21 | ✅ Strong |
+| entity_extractor.py | **70%** | 23 | ✅ Good |
+| task_context_scorer.py | **67%** | 43 | ✅ Good |
+| evaluate_retrieval.py | **43%** | 31 | ⚠️  Moderate |
+
+**Test Files**:
+1. `tests/test_memory_scorer.py` - All 10 importance scoring signals
+2. `tests/test_evaluate_retrieval.py` - Precision, Recall, F1, MRR, NDCG metrics
+3. `tests/test_knowledge_graph.py` - Graph building, PageRank, traversal
+4. `tests/test_entity_extractor.py` - FILE, FUNCTION, BUG entity extraction
+5. `tests/test_task_context_scorer.py` - Task-aware importance boosting
+6. `tests/test_multimodal_extractor.py` - Code, file, command, error extraction
+7. `tests/test_precompact_integration.py` - Full PreCompact hook pipeline
+8. `tests/test_sessionstart_integration.py` - SessionStart with task-context
+
+**Running Tests**:
+```bash
+# All tests with coverage
+pytest tests/ --cov=hooks --cov-report=term-missing
+
+# Specific module
+pytest tests/test_memory_scorer.py -v
+
+# With HTML coverage report
+pytest tests/ --cov=hooks --cov-report=html:htmlcov
+
+# Fast run (no coverage)
+pytest tests/ -q
+```
+
+**Test Configuration**:
+- `pytest.ini` - Test discovery, coverage settings
+- `requirements-dev.txt` - Testing dependencies (pytest, pytest-cov, faker, etc.)
+- `.gitignore` - Excludes .coverage, htmlcov/, __pycache__/
+
+**Key Testing Patterns**:
+- **Mock ChromaDB**: All database tests use mocked collections
+- **Mock SentenceTransformer**: Avoid loading 768MB model in tests
+- **Integration tests**: Test full PreCompact → SessionStart flow
+- **Edge cases**: Empty inputs, malformed data, error conditions
+- **Realistic data**: Use actual memory structures from production system
+
+**Testing Philosophy**:
+- ✅ Test critical paths first (hooks, scoring, retrieval)
+- ✅ Focus on behavior, not implementation details
+- ✅ Integration tests > unit tests for complex flows
+- ✅ Tests as living documentation of system behavior
+- ⚠️  Tests may need updates as system evolves (e.g., LLM-based entity extraction)

@@ -1,0 +1,29 @@
+[
+  {
+    "query": "IronFlow project syntax errors and fixes",
+    "relevant_ids": [
+      "5e68b6a0-a8f6-479d-924d-39f2f04a579b_2025-10-13T00:21:18.135589_23"
+    ],
+    "notes": "Should retrieve memories about IronFlow syntax errors"
+  },
+  {
+    "query": "knowledge graph entity extraction PageRank",
+    "relevant_ids": [],
+    "notes": "Should retrieve V5 knowledge graph memories (IDs to be filled after query)"
+  },
+  {
+    "query": "nomic-embed embedding model upgrade migration",
+    "relevant_ids": [],
+    "notes": "Should retrieve V4 nomic-embed upgrade memories"
+  },
+  {
+    "query": "bug fixes TypeError crash errors",
+    "relevant_ids": [],
+    "notes": "Should retrieve error/bug resolution memories"
+  },
+  {
+    "query": "adaptive K retrieval similarity threshold",
+    "relevant_ids": [],
+    "notes": "Should retrieve V4/V5 adaptive retrieval memories"
+  }
+]
