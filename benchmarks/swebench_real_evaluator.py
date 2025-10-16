@@ -20,8 +20,9 @@ logger = logging.getLogger(__name__)
 class RealSWEBenchEvaluator:
     """Real evaluation with repo cloning and test execution."""
 
-    def __init__(self, use_memory: bool = True):
+    def __init__(self, use_memory: bool = True, workspace_dir: str = "workspaces"):
         self.use_memory = use_memory
+        self.workspace_dir = workspace_dir
 
         # Load dataset
         dataset_path = Path(__file__).parent / "agents-never-forget/data/SWE-Bench-CL-Curriculum.json"
@@ -242,7 +243,7 @@ Begin!"""
         logger.info(f"{'='*70}")
 
         # Create workspace in LOCAL directory (NEVER use /tmp!)
-        workspaces_base = Path(__file__).parent / "workspaces"
+        workspaces_base = Path(__file__).parent / self.workspace_dir
         workspaces_base.mkdir(exist_ok=True)
         workspace_dir = workspaces_base / f"swebench_{task_id}"
         workspace_dir.mkdir(exist_ok=True)
@@ -422,10 +423,14 @@ def main():
     parser.add_argument("--tasks", type=int, default=10, help="Number of tasks")
     parser.add_argument("--no-memory", action="store_true", help="Disable memory")
     parser.add_argument("--output", type=str, default="results/swebench_real.json")
+    parser.add_argument("--workspace-dir", type=str, default="workspaces", help="Workspace directory for repo clones")
 
     args = parser.parse_args()
 
-    evaluator = RealSWEBenchEvaluator(use_memory=not args.no_memory)
+    evaluator = RealSWEBenchEvaluator(
+        use_memory=not args.no_memory,
+        workspace_dir=args.workspace_dir
+    )
     results = evaluator.run_evaluation(num_tasks=args.tasks)
 
     # Save results

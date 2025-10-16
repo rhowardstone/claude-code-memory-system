@@ -5,8 +5,17 @@ chromadb>=0.4.0
 # Efficient sentence embeddings (local, no API calls)
 sentence-transformers>=2.2.0
 
+# Required for nomic-embed model
+einops>=0.7.0
+
+# Required for torch (transitive dependency)
+sympy>=1.12
+
 # JSON Lines parsing
 jsonlines>=3.0.0
+
+# Knowledge graph and entity extraction
+networkx>=3.0
 
 # Clustering and numerical operations
 scikit-learn>=1.3.0
