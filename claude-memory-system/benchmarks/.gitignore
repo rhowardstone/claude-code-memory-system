@@ -1,0 +1,9 @@
+workspaces/
+results/
+logs/
+test_cli*.py
+test_cli*_output.txt
+test_variants/
+*.log
+*.json
+!**/agents-never-forget/**/*.json

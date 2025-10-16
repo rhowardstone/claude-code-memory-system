@@ -61,9 +61,7 @@ Build a **vector-based memory preservation system** for Claude Code that survive
 - ❌ NOT claude-code (that's just a reference copy)
 - ✅ The actual repo is: `claude-code-memory-system`
 
-**Git Identity**:
-- Name: Rye Howard-Stone
-- Email: Rye.Howard-Stone@UConn.edu
+**Git Identity**: Already configured locally
 
 ---
 
