@@ -12,7 +12,6 @@ import shutil
 from pathlib import Path
 from typing import Dict, Any, List
 import logging
-import tempfile
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -242,8 +241,11 @@ Begin!"""
         logger.info(f"Repo: {repo} | Difficulty: {difficulty}")
         logger.info(f"{'='*70}")
 
-        # Create workspace
-        workspace_dir = Path(tempfile.mkdtemp(prefix=f"swebench_{task_id}_"))
+        # Create workspace in LOCAL directory (NEVER use /tmp!)
+        workspaces_base = Path(__file__).parent / "workspaces"
+        workspaces_base.mkdir(exist_ok=True)
+        workspace_dir = workspaces_base / f"swebench_{task_id}"
+        workspace_dir.mkdir(exist_ok=True)
 
         try:
             # 1. Setup repo
