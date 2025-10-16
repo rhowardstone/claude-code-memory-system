@@ -1,6 +1,6 @@
 # Claude Code Memory System V7
 
-**Intelligent memory preservation system with contextual embeddings and industry-standard evaluation.**
+**Intelligent memory preservation system with contextual embeddings, knowledge graphs, and task-context awareness.**
 
 Stop losing context when your conversations get compacted! This system automatically extracts, scores, and preserves important memories from your coding sessions, then intelligently injects the most relevant ones back using contextual embeddings, knowledge graph traversal, and task-context scoring.
 
@@ -10,13 +10,18 @@ Stop losing context when your conversations get compacted! This system automatic
 
 ## 🌟 Features
 
-### V7: Contextual Embeddings + Evaluation Framework (NEW!)
-- **🎯 Contextual Embeddings**: Prepends session/time/file context before embedding (Anthropic Sept 2024 methodology)
-- **📊 Industry-Standard Metrics**: NDCG, Precision, Recall, F1, MRR, Context Recall/Precision
-- **🧪 Evaluation Framework**: Comprehensive test suite with industry benchmarks
-- **📈 35-67% Improvement**: Contextual retrieval matches Anthropic's published results
-- **🔬 Test Suite**: A/B testing for V6 vs V7 performance comparison
-- **📚 Research-Backed**: Aligned with Anthropic, OpenAI, NVIDIA 2024 RAG standards
+### V7: Contextual Embeddings + Last Actions
+- **🎯 "Where You Left Off"**: Shows last 5 actions, files, and status before compaction (the "50 First Dates" solution!)
+- **📝 Contextual Embeddings**: Prepends session/time/file context to embeddings for better retrieval
+- **⏰ Temporal Queries**: Find "yesterday's work" or "last week's changes" naturally
+- **📁 File-Context Queries**: Search "auth.py changes" or "modifications to utils.py"
+- **📊 Evaluation Framework**: Precision, Recall, F1, MRR metrics for measuring quality
+- **✅ Test Suite**: 293 tests, 49% coverage across critical components
+
+### V6: Clean Architecture + Centralized Versioning
+- **📦 No Version Suffixes**: Clean filenames (precompact.py, not precompact_v2.py)
+- **🔢 Centralized Versions**: All versions tracked in __version__.py
+- **📋 Proper Semantic Versioning**: Major.Minor.Patch format
 
 ### V5: Knowledge Graph + Task-Context Awareness
 - **🕸️ Knowledge Graph**: Automatically extracts entities (files, functions, bugs, features) and builds relationship graph
@@ -170,35 +175,6 @@ Just use Claude Code normally! Memories are automatically:
 1. **Extracted** when compaction triggers (PreCompact hook)
 2. **Injected** when session resumes after compaction (SessionStart hook)
 
-### Evaluation Tools (V7)
-
-Measure and improve your memory system with industry-standard metrics:
-
-```bash
-# Evaluate retrieval quality with test set
-python3 ~/.claude/memory-hooks/evaluate_retrieval.py
-
-# Evaluate single query
-python3 ~/.claude/memory-hooks/evaluate_retrieval.py \
-  --query "authentication bug fixes" \
-  --relevant-ids mem_id_1 mem_id_2
-
-# Build custom test set interactively
-python3 ~/.claude/memory-hooks/evaluate_retrieval.py --build-testset
-
-# Test V7 contextual embeddings vs V6
-python3 ~/.claude/memory-hooks/test_contextual_embeddings.py
-
-# Save evaluation results
-python3 ~/.claude/memory-hooks/evaluate_retrieval.py --output results.json
-```
-
-**Metrics computed:**
-- Precision, Recall, F1, MRR (standard IR)
-- NDCG@5, NDCG@10 (ranking quality)
-- Context Recall, Context Precision (RAG-specific)
-- Per-query breakdown + aggregate statistics
-
 ### CLI Tools
 
 Browse and search your memories anytime with `query_memories.py`:
@@ -312,15 +288,11 @@ AUTO_PRUNE = True               # Auto-prune on compaction
 ```
 ~/.claude/
 ├── memory-hooks/
-│   ├── __version__.py                      # V7: Centralized version tracking
-│   ├── precompact_memory_extractor.py      # V7: Contextual embeddings
+│   ├── precompact_memory_extractor.py      # V4: Full transcript extraction
 │   ├── sessionstart_memory_injector.py     # V5: Task-context aware injection
-│   ├── evaluate_retrieval.py               # V7: Evaluation framework
-│   ├── test_contextual_embeddings.py       # V7: A/B testing V6 vs V7
-│   ├── test_queries.json                   # V7: Test set for evaluation
-│   ├── entity_extractor.py                 # V5: Entity extraction
-│   ├── knowledge_graph.py                  # V5: Graph construction
-│   ├── task_context_scorer.py              # V5: Task-context scoring
+│   ├── entity_extractor.py                 # Entity extraction
+│   ├── knowledge_graph.py                  # Graph construction
+│   ├── task_context_scorer.py              # Task-context scoring
 │   ├── query_memories.py                   # CLI query interface
 │   ├── memory_scorer.py                    # Importance calculation
 │   ├── multimodal_extractor.py             # Artifact extraction
@@ -456,11 +428,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- Built for [Claude Code](https://claude.ai/claude-code) by Rye Howard-Stone
-- Co-developed with Claude (Anthropic's AI assistant)
+- Built for [Claude Code](https://claude.ai/claude-code)
 - Uses [ChromaDB](https://www.trychroma.com/) for vector storage
-- Embeddings from [sentence-transformers](https://www.sbert.net/) and [Nomic AI](https://www.nomic.ai/)
-- Research aligned with Anthropic, OpenAI, and NVIDIA 2024 RAG standards
+- Embeddings from [sentence-transformers](https://www.sbert.net/)
 - Inspired by human episodic memory systems
 
 ---
@@ -475,23 +445,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🗺️ Roadmap
 
-### Completed ✅
-- [x] **V7**: Contextual embeddings (Anthropic methodology)
-- [x] **V7**: Industry-standard evaluation metrics (NDCG, Context Recall/Precision)
-- [x] **V7**: A/B testing framework for comparing versions
-- [x] **V5**: Knowledge graph with entity extraction
-- [x] **V5**: Task-context aware importance scoring
-- [x] **V4**: Full transcript storage (no truncation)
-- [x] **V4**: Upgraded embeddings (nomic-embed-text-v1.5)
-- [x] **V4**: Adaptive K retrieval (0-20 based on quality)
-
-### In Progress 🚧
-- [ ] Long-horizon multi-session benchmarks (OpenAI-style)
-- [ ] Faithfulness metric (hallucination detection)
-- [ ] Clean up SessionStart verbose output
-- [ ] Slash commands for memory operations
-
-### Planned 📋
 - [ ] Cross-session memory (with explicit user permission)
 - [ ] Memory visualization dashboard
 - [ ] Custom scoring rules via config file
@@ -500,7 +453,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - [ ] Multi-language support for code artifacts
 - [ ] Compression for very old memories
 - [ ] Collaborative memory sharing (team features)
-- [ ] Claude Code plugin packaging
 
 ---
 

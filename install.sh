@@ -1,20 +1,21 @@
 #!/bin/bash
-# Claude Code Memory System V5 - Installation Script
+# Claude Code Memory System V7 - Installation Script
 # Installs memory hooks and updates settings without overwriting existing config
 
 set -e
 
 echo "========================================================================="
-echo "Claude Code Memory System V5 - Installer"
+echo "Claude Code Memory System V7 - Installer"
 echo "========================================================================="
 echo ""
 echo "This will install:"
-echo "  • Memory extraction with FULL transcripts (PreCompact V4)"
-echo "  • Task-context aware memory injection (SessionStart V5)"
-echo "  • Knowledge graph with entity extraction (Phase 2)"
+echo "  • Memory extraction with FULL transcripts (PreCompact)"
+echo "  • Task-context aware memory injection (SessionStart)"
+echo "  • Knowledge graph with entity extraction"
 echo "  • Smart importance scoring and adaptive K retrieval"
 echo "  • Vector database with nomic-embed (768d, 8k token context)"
 echo "  • CLI tools for browsing and searching memories"
+echo "  • Centralized version tracking (__version__.py)"
 echo ""
 
 # Check if Python3 is available
@@ -42,10 +43,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "📁 Creating installation directory..."
 mkdir -p "$INSTALL_DIR"
 
-# Copy hooks - V5 complete system
+# Copy hooks - V6 complete system
 echo "📋 Installing hooks..."
-cp "$SCRIPT_DIR/hooks/precompact_memory_extractor_v2.py" "$INSTALL_DIR/"
-cp "$SCRIPT_DIR/hooks/sessionstart_memory_injector_v5.py" "$INSTALL_DIR/"
+cp "$SCRIPT_DIR/hooks/__version__.py" "$INSTALL_DIR/"
+cp "$SCRIPT_DIR/hooks/precompact_memory_extractor.py" "$INSTALL_DIR/"
+cp "$SCRIPT_DIR/hooks/sessionstart_memory_injector.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/hooks/entity_extractor.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/hooks/knowledge_graph.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/hooks/task_context_scorer.py" "$INSTALL_DIR/"
@@ -98,7 +100,7 @@ if [ ! -f "$SETTINGS_FILE" ]; then
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/memory-hooks/precompact_memory_extractor_v2.py"
+            "command": "python3 ~/.claude/memory-hooks/precompact_memory_extractor.py"
           }
         ]
       }
@@ -109,7 +111,7 @@ if [ ! -f "$SETTINGS_FILE" ]; then
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector_v5.py"
+            "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector.py"
           }
         ]
       }
@@ -117,7 +119,7 @@ if [ ! -f "$SETTINGS_FILE" ]; then
   }
 }
 EOF
-    echo "✓ Created settings.json with memory hooks (V5)"
+    echo "✓ Created settings.json with memory hooks (V7)"
 else
     echo "Updating existing settings.json..."
 
@@ -145,7 +147,7 @@ settings["hooks"]["PreCompact"] = [
         "hooks": [
             {
                 "type": "command",
-                "command": "python3 ~/.claude/memory-hooks/precompact_memory_extractor_v2.py"
+                "command": "python3 ~/.claude/memory-hooks/precompact_memory_extractor.py"
             }
         ]
     }
@@ -157,7 +159,7 @@ settings["hooks"]["SessionStart"] = [
         "hooks": [
             {
                 "type": "command",
-                "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector_v5.py"
+                "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector.py"
             }
         ]
     }
@@ -167,7 +169,7 @@ settings["hooks"]["SessionStart"] = [
 with open(settings_path, 'w') as f:
     json.dump(settings, f, indent=2)
 
-print("✓ Settings updated successfully (V5)")
+print("✓ Settings updated successfully (V7)")
 PYEOF
 
     if [ $? -ne 0 ]; then
@@ -178,14 +180,14 @@ fi
 
 echo ""
 echo "========================================================================="
-echo "✅ Installation Complete - V5 with Knowledge Graph!"
+echo "✅ Installation Complete - V7 with Contextual Embeddings + Last Actions!"
 echo "========================================================================="
 echo ""
 echo "Memory system installed successfully!"
 echo ""
 echo "📊 What's been installed:"
-echo "  • PreCompact V4: Extracts FULL transcripts (not truncated!)"
-echo "  • SessionStart V5: Task-context aware with knowledge graph"
+echo "  • PreCompact: Extracts FULL transcripts + last actions before compaction"
+echo "  • SessionStart: Shows 'Where You Left Off' + task-context aware retrieval"
 echo "  • Entity extraction: FILES, FUNCTIONS, BUGS, FEATURES, etc."
 echo "  • Knowledge graph: NetworkX with PageRank centrality"
 echo "  • Task-context scoring: Boosts memories relevant to current work"
@@ -196,6 +198,7 @@ echo "  • Smart chunking: Intent-Action-Outcome structure"
 echo "  • Importance scoring: 10+ signals (decisions, fixes, learnings)"
 echo "  • Multi-modal artifacts: code, files, errors, architecture"
 echo "  • Auto-pruning: age, redundancy, capacity-based"
+echo "  • Centralized versioning: All versions tracked in __version__.py"
 echo ""
 echo "🚀 Next steps:"
 echo "  1. Continue using Claude Code normally"

@@ -113,8 +113,9 @@ python3 hooks/memory_clustering.py
 ```
 claude-code-memory-system/
 ├── hooks/                      # Core hook implementations
-│   ├── precompact_memory_extractor_v2.py
-│   ├── sessionstart_memory_injector_v5.py
+│   ├── __version__.py
+│   ├── precompact_memory_extractor.py
+│   ├── sessionstart_memory_injector.py
 │   ├── memory_scorer.py
 │   ├── multimodal_extractor.py
 │   ├── memory_pruner.py
