@@ -334,7 +334,7 @@ Test extraction without compaction:
 ```bash
 cd ~/.claude/memory-hooks
 
-cat << EOF | python3 precompact_memory_extractor_v2.py
+cat << EOF | python3 precompact_memory_extractor.py
 {
   "session_id": "your-session-id",
   "transcript_path": "/path/to/transcript.jsonl",

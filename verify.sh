@@ -34,10 +34,11 @@ echo "Checking installation..."
 if [ -d "$HOME/.claude/memory-hooks" ]; then
     check_pass "Installation directory exists"
 
-    # Check hook files (V5)
+    # Check hook files (V6)
     REQUIRED_FILES=(
-        "precompact_memory_extractor_v2.py"
-        "sessionstart_memory_injector_v5.py"
+        "__version__.py"
+        "precompact_memory_extractor.py"
+        "sessionstart_memory_injector.py"
         "entity_extractor.py"
         "knowledge_graph.py"
         "task_context_scorer.py"
@@ -143,13 +144,13 @@ echo "Results: $PASS passed, $FAIL failed"
 echo ""
 
 if [ $FAIL -eq 0 ]; then
-    echo "✅ All checks passed! Memory System V5 is properly installed."
+    echo "✅ All checks passed! Memory System V6 is properly installed."
     echo ""
     echo "Next steps:"
     echo "  1. Use Claude Code normally"
     echo "  2. When compaction triggers, memories will be automatically extracted"
     echo "  3. Use CLI tools to browse: python3 ~/.claude/memory-hooks/query_memories.py --help"
-    echo "  4. V5 features include knowledge graph and task-context aware retrieval!"
+    echo "  4. V6 features: Knowledge graph, task-context awareness, clean architecture!"
     exit 0
 else
     echo "⚠️  Some checks failed. Please review the issues above."

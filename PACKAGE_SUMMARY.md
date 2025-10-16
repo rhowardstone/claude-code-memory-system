@@ -12,7 +12,7 @@ This package contains a complete, production-ready memory preservation system fo
 
 ### Core Components
 
-1. **PreCompact Hook** (`precompact_memory_extractor_v2.py`)
+1. **PreCompact Hook** (`precompact_memory_extractor.py`)
    - Extracts memories before compaction
    - Smart Intent-Action-Outcome chunking
    - Importance scoring with 10+ signals
@@ -20,7 +20,7 @@ This package contains a complete, production-ready memory preservation system fo
    - Auto-pruning and clustering
    - **No API calls required** - 100% local
 
-2. **SessionStart Hook** (`sessionstart_memory_injector_v5.py`)
+2. **SessionStart Hook** (`sessionstart_memory_injector.py`)
    - Injects memories after compaction
    - Vector search for semantic relevance
    - Recent + relevant memory retrieval
@@ -244,13 +244,14 @@ cd claude-memory-system
 ```
 claude-code-memory-system/
 ├── hooks/                              # Core implementation
-│   ├── precompact_memory_extractor_v2.py   # Main extraction
-│   ├── sessionstart_memory_injector_v5.py  # Memory injection
+│   ├── __version__.py                      # Centralized version tracking
+│   ├── precompact_memory_extractor.py      # Main extraction
+│   ├── sessionstart_memory_injector.py     # Memory injection
 │   ├── memory_scorer.py                    # Importance scoring
 │   ├── multimodal_extractor.py             # Artifact extraction
 │   ├── memory_pruner.py                    # Auto-pruning
 │   ├── memory_clustering.py                # Hierarchical clustering
-│   ├── query_memories.py                       # CLI tool
+│   ├── query_memories.py                   # CLI tool
 │   └── requirements.txt                    # Python dependencies
 ├── docs/                               # Documentation
 │   ├── INSTALLATION.md                 # Installation guide

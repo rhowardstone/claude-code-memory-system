@@ -170,7 +170,7 @@ tail -100 ~/.claude/memory_hooks_debug.log | grep "session-id"
 
 # Manually re-extract if needed
 cd ~/.claude/memory-hooks
-cat << EOF | python3 precompact_memory_extractor_v2.py
+cat << EOF | python3 precompact_memory_extractor.py
 {
   "session_id": "your-session-id",
   "transcript_path": "/path/to/transcript.jsonl",
@@ -184,7 +184,7 @@ EOF
 
 ```bash
 # Increase minimum importance threshold
-# Edit sessionstart_memory_injector_v5.py:
+# Edit sessionstart_memory_injector.py:
 MIN_IMPORTANCE = 5.0  # Was 3.0
 
 # Run pruning (see memory_pruner.py for configuration)
@@ -204,11 +204,11 @@ OLD_MEMORY_DAYS = 30  # Was 90
 # Then run PreCompact on next compaction
 ```
 
-### Scenario 4: V5 Knowledge Graph Performance
+### Scenario 4: Knowledge Graph Performance
 
 ```bash
 # Knowledge graph builds on first query after compaction
-# Check cache TTL in sessionstart_memory_injector_v5.py:
+# Check cache TTL in sessionstart_memory_injector.py:
 KG_CACHE_TTL = 300  # seconds (5 minutes)
 
 # For faster startup, increase cache lifetime:

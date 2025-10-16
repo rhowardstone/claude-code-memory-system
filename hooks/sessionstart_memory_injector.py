@@ -90,6 +90,139 @@ def get_or_build_knowledge_graph() -> MemoryKnowledgeGraph:
     return kg
 
 
+def retrieve_last_actions(client, session_id: str) -> Dict[str, Any]:
+    """Retrieve last actions before compaction from session_state collection."""
+    try:
+        collection = client.get_or_create_collection(
+            name="session_state",
+            metadata={"description": "Last actions before compaction for each session"}
+        )
+
+        results = collection.get(
+            ids=[f"last_actions_{session_id}"],
+            limit=1
+        )
+
+        if results and results.get("documents") and len(results["documents"]) > 0:
+            last_actions = json.loads(results["documents"][0])
+            debug_log(f"Retrieved last actions for session {session_id[:8]}")
+            return last_actions
+        else:
+            debug_log(f"No last actions found for session {session_id[:8]}")
+            return {}
+
+    except Exception as e:
+        debug_log(f"Error retrieving last actions: {e}")
+        return {}
+
+
+def get_memory_statistics(client, collection, kg: MemoryKnowledgeGraph, session_id: str) -> Dict[str, Any]:
+    """Gather memory database statistics."""
+    stats = {
+        "total_memories": 0,
+        "session_memories": 0,
+        "high_importance": 0,
+        "graph_nodes": 0,
+        "graph_edges": 0
+    }
+
+    try:
+        # Get total memories
+        all_results = collection.get(limit=10000)
+        stats["total_memories"] = len(all_results.get("ids", []))
+
+        # Get session-specific memories
+        session_results = collection.get(
+            where={"session_id": session_id},
+            limit=1000
+        )
+        stats["session_memories"] = len(session_results.get("ids", []))
+
+        # Count high importance memories (>= 15.0)
+        if session_results.get("metadatas"):
+            stats["high_importance"] = sum(
+                1 for m in session_results["metadatas"]
+                if m.get("importance_score", 0) >= 15.0
+            )
+
+        # Knowledge graph stats
+        if kg:
+            stats["graph_nodes"] = kg.graph.number_of_nodes()
+            stats["graph_edges"] = kg.graph.number_of_edges()
+
+    except Exception as e:
+        debug_log(f"Error gathering statistics: {e}")
+
+    return stats
+
+
+def format_statistics_section(stats: Dict[str, Any]) -> str:
+    """Format memory statistics section."""
+    parts = []
+    parts.append("## 📊 Memory Database Status")
+    parts.append("")
+    parts.append(f"• **Total Memories**: {stats['total_memories']} stored")
+    parts.append(f"• **This Session**: {stats['session_memories']} memories")
+    parts.append(f"• **High Priority**: {stats['high_importance']} critical memories (≥15.0 importance)")
+    parts.append(f"• **Knowledge Graph**: {stats['graph_nodes']} entities, {stats['graph_edges']} relationships")
+    parts.append("")
+    parts.append("---")
+    parts.append("")
+
+    return "\n".join(parts)
+
+
+def format_last_actions_section(last_actions: Dict[str, Any]) -> str:
+    """Format 'Where You Left Off' section from last actions."""
+    if not last_actions:
+        return ""
+
+    parts = []
+    parts.append("## 🎯 Where You Left Off")
+    parts.append("")
+    parts.append("*Last actions before compaction:*")
+    parts.append("")
+
+    # Last user message
+    if last_actions.get("last_user_message"):
+        parts.append(f"**Your Last Request**: {last_actions['last_user_message']}")
+        parts.append("")
+
+    # Last tool calls
+    tool_calls = last_actions.get("last_tool_calls", [])
+    if tool_calls:
+        parts.append("**Recent Actions**:")
+        for i, tool_call in enumerate(tool_calls[:5], 1):
+            tool_name = tool_call.get("tool", "unknown")
+            file_path = tool_call.get("file", "")
+
+            if file_path:
+                parts.append(f"{i}. `{tool_name}` → `{file_path}`")
+            else:
+                parts.append(f"{i}. `{tool_name}`")
+        parts.append("")
+
+    # Files modified
+    files = last_actions.get("files_modified", [])
+    if files:
+        files_str = ", ".join(f"`{f}`" for f in files[:5])
+        if len(files) > 5:
+            files_str += f" +{len(files) - 5} more"
+        parts.append(f"**Files Modified**: {files_str}")
+        parts.append("")
+
+    # Outcome
+    outcome = last_actions.get("last_outcome", "")
+    if outcome:
+        parts.append(f"**Status**: {outcome}")
+        parts.append("")
+
+    parts.append("---")
+    parts.append("")
+
+    return "\n".join(parts)
+
+
 def extract_smart_summary(metadata: Dict[str, Any], document: str) -> Dict[str, Any]:
     """Extract smart summary from memory with artifact details."""
     summary = {
@@ -183,21 +316,23 @@ def get_relevant_memories_with_task_context(
     Adaptive K retrieval WITH task-context scoring.
 
     Steps:
-    1. Semantic search to get candidates (using nomic-embed)
+    1. Semantic search to get candidates (using nomic-embed) FROM ALL SESSIONS
     2. Extract task entities from query
     3. Score candidates with task-context boost
     4. Apply adaptive K based on quality
     5. Return 0-max_results memories
+
+    CRITICAL: Searches across ALL sessions to enable cross-compaction memory retrieval!
     """
     try:
         embedding_model = SentenceTransformer(EMBEDDING_MODEL, trust_remote_code=True)
         query_embedding = embedding_model.encode(query_text).tolist()
 
-        # Get candidates with semantic search
+        # Get candidates with semantic search (CROSS-SESSION: No session_id filter!)
+        # This allows retrieval of memories from previous sessions after compaction
         results = collection.query(
             query_embeddings=[query_embedding],
-            n_results=50,  # Get plenty of candidates
-            where={"session_id": session_id}
+            n_results=50  # Get plenty of candidates from ALL sessions
         )
 
         if not results or not results.get("metadatas") or not results["metadatas"][0]:
@@ -358,12 +493,25 @@ def format_memory_entry(mem: Dict[str, Any], index: int, show_similarity: bool =
     return "\n".join(parts)
 
 
-def format_enhanced_context(recent_memories: List[Dict], relevant_memories: List[Dict]) -> str:
-    """Format with query tool availability and smart summaries."""
+def format_enhanced_context(recent_memories: List[Dict], relevant_memories: List[Dict], last_actions: Dict[str, Any] = None, stats: Dict[str, Any] = None) -> str:
+    """Format with statistics, query tools, last actions, and smart summaries."""
     parts = []
 
     parts.append(f"# 🧠 Memory Context Restored ({SESSIONSTART_VERSION}: Task-Context Aware)")
     parts.append("")
+
+    # Show database statistics first
+    if stats:
+        stats_section = format_statistics_section(stats)
+        if stats_section:
+            parts.append(stats_section)
+
+    # Show "Where You Left Off" section
+    if last_actions:
+        last_actions_section = format_last_actions_section(last_actions)
+        if last_actions_section:
+            parts.append(last_actions_section)
+
     parts.append("## 🔍 Memory Query Tools Available")
     parts.append("")
     parts.append("You can query the memory database proactively using:")
@@ -417,7 +565,7 @@ def format_enhanced_context(recent_memories: List[Dict], relevant_memories: List
 
 
 def main():
-    """SessionStart injection with task-context awareness."""
+    """SessionStart injection with task-context awareness and last actions."""
     try:
         input_data = json.load(sys.stdin)
 
@@ -441,6 +589,12 @@ def main():
         # Build/get knowledge graph
         kg = get_or_build_knowledge_graph()
 
+        # Gather memory statistics
+        stats = get_memory_statistics(client, collection, kg, session_id)
+
+        # Retrieve last actions before compaction
+        last_actions = retrieve_last_actions(client, session_id)
+
         # Get high-quality memories
         recent_memories = get_important_recent_memories(collection, session_id, RECENT_MEMORIES)
         debug_log(f"Retrieved {len(recent_memories)} important recent memories")
@@ -452,12 +606,12 @@ def main():
         )
         debug_log(f"Retrieved {len(relevant_memories)} relevant memories with task-context scoring")
 
-        if not recent_memories and not relevant_memories:
-            debug_log("No high-importance memories to inject")
+        if not recent_memories and not relevant_memories and not last_actions:
+            debug_log("No high-importance memories or last actions to inject")
             sys.exit(0)
 
-        # Format smart context
-        additional_context = format_enhanced_context(recent_memories, relevant_memories)
+        # Format smart context with stats, last actions, and memories
+        additional_context = format_enhanced_context(recent_memories, relevant_memories, last_actions, stats)
 
         output = {
             "hookSpecificOutput": {
@@ -467,7 +621,9 @@ def main():
         }
 
         print(json.dumps(output))
-        debug_log(f"Injected {len(recent_memories)} recent + {len(relevant_memories)} relevant ({SESSIONSTART_VERSION} task-aware)")
+
+        last_actions_msg = f" + last actions" if last_actions else ""
+        debug_log(f"Injected {len(recent_memories)} recent + {len(relevant_memories)} relevant{last_actions_msg} ({SESSIONSTART_VERSION} task-aware)")
 
     except Exception as e:
         debug_log(f"Unexpected error: {e}")

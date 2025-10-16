@@ -74,7 +74,7 @@ Edit `~/.claude/settings.json` to add hooks:
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/memory-hooks/precompact_memory_extractor_v2.py"
+            "command": "python3 ~/.claude/memory-hooks/precompact_memory_extractor.py"
           }
         ]
       }
@@ -85,7 +85,7 @@ Edit `~/.claude/settings.json` to add hooks:
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector_v5.py"
+            "command": "python3 ~/.claude/memory-hooks/sessionstart_memory_injector.py"
           }
         ]
       }
