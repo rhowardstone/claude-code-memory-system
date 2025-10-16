@@ -43,7 +43,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "📁 Creating installation directory..."
 mkdir -p "$INSTALL_DIR"
 
-# Copy hooks - V6 complete system
+# Copy hooks - V7 complete system
 echo "📋 Installing hooks..."
 cp "$SCRIPT_DIR/hooks/__version__.py" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/hooks/precompact_memory_extractor.py" "$INSTALL_DIR/"
