@@ -30,6 +30,25 @@ from pathlib import Path
 from typing import List, Dict, Any
 import time
 
+# CRITICAL: Clean sys.path BEFORE imports to avoid workspace pollution
+# This prevents import errors from broken/old packages in swebench workspaces
+_original_cwd = os.getcwd()
+_hook_dir = Path(__file__).parent.absolute()
+
+# Remove ALL instances of workspace directory from sys.path
+# PyTorch imports sympy, so we must prevent it from finding workspace versions
+# Filter out: empty paths, current dir, ANY path containing 'swebench' (anywhere in path)
+sys.path = [
+    p for p in sys.path
+    if p != '' and p != _original_cwd and 'swebench' not in p.lower()
+]
+
+# Add hook directory to front of sys.path for clean imports
+sys.path.insert(0, str(_hook_dir))
+
+# Change to hook directory to keep environment clean
+os.chdir(_hook_dir)
+
 try:
     from __version__ import __version__, SESSIONSTART_VERSION
     import chromadb
@@ -37,8 +56,9 @@ try:
     from knowledge_graph import MemoryKnowledgeGraph
     from task_context_scorer import TaskContextScorer
 except ImportError as e:
-    print(f"ERROR: {e}", file=sys.stderr)
-    sys.exit(1)
+    # Fail silently if imports fail (e.g., from polluted swebench workspaces)
+    # This allows evaluation to continue while still working in normal use
+    sys.exit(0)
 
 # Configuration
 MEMORY_DB_PATH = Path.home() / ".claude" / "memory_db"
